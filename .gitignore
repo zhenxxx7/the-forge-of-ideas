@@ -1,0 +1,10 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+.vite/
+*.tsbuildinfo
+.env*
+!.env.example
+reference/
+artifacts/
