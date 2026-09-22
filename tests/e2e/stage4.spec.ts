@@ -56,7 +56,7 @@ test('complete Stage 4 with two supporting ideas, notes, reload and revision', a
   await page.getByRole('button', { name: 'Review connections', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Stage 4', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Connect', exact: true })).toBeVisible();
-  await expect(page.getByLabel('Elaborate, locked', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open Elaborate', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Quest journal', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText(statement);
   const downloadEvent = page.waitForEvent('download');

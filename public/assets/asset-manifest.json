@@ -6,5 +6,8 @@
   "logos": "Extracted from supplied reference artwork; no new institutional affiliation claimed",
   "stage2": "Portal backgrounds and transparent idea pouch prepared with the built-in imagegen tool from supplied PDF pages 10, 11 and 13. See docs/stage2-artwork.md for prompts and provenance.",
   "stage3": "Clean sorting-room background prepared with built-in imagegen from supplied PDF page 16. Interactive ores are code-native SVGs; category belts and transitions are CSS. See docs/stage3-artwork.md.",
-  "stage4": "Clean connecting chamber prepared with built-in imagegen from supplied PDF page 19. Pairing, editable statements and animated crystals are native HTML/SVG/CSS. See docs/stage4-artwork.md."
+  "stage4": "Clean connecting chamber prepared with built-in imagegen from supplied PDF page 19. Pairing, editable statements and animated crystals are native HTML/SVG/CSS. See docs/stage4-artwork.md.",
+  "stage5": "Clean elaboration machine prepared with built-in imagegen from supplied PDF page 24. The crystal, rune flasks, writing editor and potion review are native HTML/SVG/CSS. See docs/stage5-artwork.md.",
+  "stage6": "Clean battlefield and transparent Beast prepared with built-in imagegen from supplied PDF page 27. Aiming, trajectory, projectile, impact and bars are native HTML/SVG/CSS. See docs/stage6-artwork.md.",
+  "ending": "Clean restored valley and Archival Hall prepared with built-in imagegen from supplied PDF pages 31–32. The portal, sealed record scroll, reflection and notes download are native HTML/SVG/CSS. See docs/ending-artwork.md."
 }

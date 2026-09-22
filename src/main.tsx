@@ -11,5 +11,8 @@ import './styles.css';
 import './stage2.css';
 import './stage3.css';
 import './stage4.css';
+import './stage5.css';
+import './stage6.css';
+import './ending.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

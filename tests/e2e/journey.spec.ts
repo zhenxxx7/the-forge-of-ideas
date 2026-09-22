@@ -88,7 +88,7 @@ test('settings, focus, home and cancellation preserve progress', async ({ page }
   expect(scrollBox && copyBox && copyBox.y + copyBox.height <= scrollBox.y + scrollBox.height).toBeTruthy();
 });
 
-test('all four stages remain playable when browser storage is blocked', async ({ page }) => {
+test('all six stages and the ending remain playable when browser storage is blocked', async ({ page }) => {
   await page.addInitScript(() => {
     Storage.prototype.getItem = () => { throw new Error('Storage is blocked'); };
     Storage.prototype.setItem = () => { throw new Error('Storage is blocked'); };
@@ -132,5 +132,29 @@ test('all four stages remain playable when browser storage is blocked', async ({
   await page.getByRole('button', { name: 'Review connections', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Stage 4', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Connect', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Start Stage 5', exact: true }).click();
+  await page.getByRole('button', { name: 'Enter the chamber', exact: true }).click();
+  await page.getByRole('button', { name: 'Select crystal: Lifelike AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Add Evidence rune', exact: true }).click();
+  await page.getByRole('button', { name: 'Add Effect rune', exact: true }).click();
+  await page.getByRole('textbox', { name: /Write how your evidence/ }).fill('The sensory detail develops my idea about a lifelike artificial experience. I would check this interpretation against the classroom extract.');
+  await page.getByRole('button', { name: 'Review infusions', exact: true }).click();
+  await page.getByRole('button', { name: 'Complete Stage 5', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Review Elaborate', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Start Stage 6', exact: true }).click();
+  await page.getByRole('button', { name: 'Face the Beast', exact: true }).click();
+  await page.getByRole('button', { name: 'Take aim', exact: true }).click();
+  await page.getByRole('button', { name: 'Select infusion: Lifelike AI', exact: true }).click();
+  await page.getByRole('slider', { name: /Horizontal aim/ }).fill('50');
+  await page.getByRole('button', { name: 'Launch infusion', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'The Beast retreats.', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Complete Stage 6', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'A journey well forged.', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Enter the Archival Hall', exact: true }).click();
+  await page.getByRole('button', { name: 'Open your journey record', exact: true }).click();
+  await page.getByRole('textbox', { name: /One thought to carry forward/ }).fill('I can explain my ideas more clearly.');
+  await expect(page.getByRole('dialog')).toContainText('Could not save in this browser.');
+  await expect(page.getByRole('dialog')).toContainText('Your developed ideas');
+  await page.getByRole('button', { name: 'Back to the Hall', exact: true }).click();
   await expect(page.getByText('Progress could not be saved')).toBeVisible();
 });

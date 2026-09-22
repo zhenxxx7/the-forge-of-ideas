@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "name": "Sean",
+  "screen": "challenge",
+  "prologueIndex": 2,
+  "explored": ["how", "moment", "tense"],
+  "completed": true,
+  "generate": { "step": "collected", "selected": ["setting", "senses"], "completed": true },
+  "sort": { "step": "review", "assignments": { "setting": "central", "senses": "supporting" }, "completed": true },
+  "connect": {
+    "step": "review", "completed": true, "timerPaused": true,
+    "connections": [{ "main": "setting", "supporting": ["senses"], "explanation": "Sensory details make the setting threatening." }]
+  },
+  "elaborate": {
+    "step": "review", "completed": true, "timerPaused": true,
+    "infusions": [{ "main": "setting", "runes": ["evidence", "effect"], "response": "I would use a precise classroom detail to explain how the setting makes the reader anticipate danger.", "sourceFingerprint": "[\"setting\",[\"senses\"],\"Sensory details make the setting threatening.\"]" }]
+  },
+  "challenge": { "step": "won", "selected": null, "used": ["setting"], "aim": 50, "hits": 1, "confusion": 0, "lastOutcome": "hit", "completed": true }
+}

@@ -1,4 +1,4 @@
-export type Screen = 'splash' | 'landing' | 'name' | 'prologue' | 'prepare' | 'journey' | 'generate' | 'sort' | 'connect';
+export type Screen = 'splash' | 'landing' | 'name' | 'prologue' | 'prepare' | 'journey' | 'generate' | 'sort' | 'connect' | 'elaborate' | 'challenge' | 'ending';
 export type Keyword = 'how' | 'moment' | 'tense';
 
 export const KEYWORDS: { id: Keyword; label: string; title: string; explanation: string }[] = [
