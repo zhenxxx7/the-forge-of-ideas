@@ -8,5 +8,8 @@ import '@fontsource/cinzel/600.css';
 import '@fontsource/metal-mania/400.css';
 import App from './App';
 import './styles.css';
+import './stage2.css';
+import './stage3.css';
+import './stage4.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>);

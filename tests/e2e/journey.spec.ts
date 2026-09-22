@@ -88,7 +88,7 @@ test('settings, focus, home and cancellation preserve progress', async ({ page }
   expect(scrollBox && copyBox && copyBox.y + copyBox.height <= scrollBox.y + scrollBox.height).toBeTruthy();
 });
 
-test('works without storage and recovers from an invalid save', async ({ page }) => {
+test('all four stages remain playable when browser storage is blocked', async ({ page }) => {
   await page.addInitScript(() => {
     Storage.prototype.getItem = () => { throw new Error('Storage is blocked'); };
     Storage.prototype.setItem = () => { throw new Error('Storage is blocked'); };
@@ -99,4 +99,38 @@ test('works without storage and recovers from an invalid save', async ({ page })
   await prepare(page);
   await page.getByRole('button', { name: 'How', exact: true }).click();
   await expect(page.getByLabel('1 of 3 phrases explored')).toBeVisible();
+  await page.getByRole('button', { name: 'this moment', exact: true }).click();
+  await page.getByRole('button', { name: 'so tense', exact: true }).click();
+  await page.getByRole('button', { name: 'View your journey' }).click();
+  await page.getByRole('button', { name: 'Complete Stage 1' }).click();
+  const completionDialog = page.getByRole('dialog');
+  await expect(completionDialog).toContainText('STAGE 1 · COMPLETE');
+  await completionDialog.getByRole('button', { name: 'Start Stage 2', exact: true }).click();
+  await page.getByRole('button', { name: 'Enter the Forge', exact: true }).click();
+  await page.getByRole('button', { name: 'Start gathering', exact: true }).click();
+  await page.getByRole('button', { name: 'Collect idea', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore Sensory detail', exact: true }).click();
+  await page.getByRole('button', { name: 'Collect idea', exact: true }).click();
+  await page.getByRole('button', { name: 'Review my pouch', exact: true }).click();
+  await page.getByRole('button', { name: 'Complete Stage 2', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Review Generate', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Start Stage 3', exact: true }).click();
+  await page.getByRole('button', { name: 'Start sorting', exact: true }).click();
+  await page.getByRole('button', { name: 'Select Lifelike AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Move selected idea to Central', exact: true }).click();
+  await page.getByRole('button', { name: 'Select Sensory detail', exact: true }).click();
+  await page.getByRole('button', { name: 'Move selected idea to Supporting', exact: true }).click();
+  await page.getByRole('button', { name: 'Review sorting', exact: true }).click();
+  await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Review Sort', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Start Stage 4', exact: true }).click();
+  await page.getByRole('button', { name: 'Enter the chamber', exact: true }).click();
+  await page.getByRole('button', { name: 'Select central idea: Lifelike AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Select supporting idea: Sensory detail', exact: true }).click();
+  await page.getByRole('button', { name: 'Forge connection', exact: true }).click();
+  await page.getByRole('textbox', { name: /How does the supporting idea/ }).fill('Lifelike details make an artificial experience feel threatening.');
+  await page.getByRole('button', { name: 'Review connections', exact: true }).click();
+  await page.getByRole('button', { name: 'Complete Stage 4', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Review Connect', exact: true })).toBeVisible();
+  await expect(page.getByText('Progress could not be saved')).toBeVisible();
 });

@@ -32,14 +32,9 @@ button { transition: color 180ms, background-color 180ms, border-color 180ms, bo
 .room-vignette { background: radial-gradient(ellipse at 50% 40%, transparent 45%, #03050935 100%); }
 .atmosphere { z-index: 2; }
 .atmosphere canvas { display: block; }
-.raven-character { position: absolute; left: 0.2%; bottom: 44.9%; width: 29.3%; height: 47.6%; z-index: 3; pointer-events: none; transform-origin: 58% 100%; }
-.raven-character img { position: absolute; bottom: 0; width: 100%; height: 100%; object-fit: contain; object-position: center bottom; user-select: none; }
-.raven-character .raven-open { opacity: 0; }
-.raven-character .raven-closed { bottom: -10.7%; }
+.raven-character { position: absolute; left: 0.2%; bottom: 44.9%; width: 29.3%; height: 47.6%; z-index: 3; pointer-events: none; }
+.raven-rig { position: absolute; bottom: -10.7%; width: 100%; height: 100%; overflow: visible; user-select: none; }
 .raven-character.raven-guide { width: 30%; left: 0.7%; }
-.raven-character.is-speaking .raven-closed { animation: beak-closed 800ms steps(1) 4; }
-.raven-character.is-speaking .raven-open { animation: beak-open 800ms steps(1) 4; }
-.raven-landing { animation: raven-breathe 5.5s ease-in-out infinite; }
 .scene-enter { animation: arrive 500ms ease both; }
 .text-enter { animation: text-appear 280ms ease both; }
 .eyebrow { font-family: 'Cinzel', Georgia, serif; font-size: 0.67cqw; font-weight: 600; letter-spacing: 0.18em; color: #c9b68a; margin: 0; }
@@ -219,13 +214,9 @@ button { transition: color 180ms, background-color 180ms, border-color 180ms, bo
 
 .large-text .dialogue-copy { font-size: 1.55cqw; line-height: 1.65; }.large-text .dialogue-scroll { min-height: 29%; bottom: 4%; }.large-text .dialogue-content { padding-top: 1.4cqw; }.large-text .dialogue-hint { font-size: 1cqw; }.large-text .continue-hint { display: none; }
 .reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-.reduced-motion .raven-open { opacity: 0 !important; }.reduced-motion .raven-closed { opacity: 1 !important; }
 @keyframes arrive { from { opacity: 0; translate: 0 5px; } to { opacity: 1; translate: 0 0; } }
 @keyframes text-appear { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modal-appear { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes raven-breathe { 0%, 100% { transform: rotate(-0.3deg) scaleY(1); } 50% { transform: rotate(0.2deg) scaleY(1.006); } }
-@keyframes beak-open { 0%, 19%, 44%, 75%, 100% { opacity: 0; } 8%, 30%, 62% { opacity: 1; } }
-@keyframes beak-closed { 0%, 19%, 44%, 75%, 100% { opacity: 1; } 8%, 30%, 62% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }

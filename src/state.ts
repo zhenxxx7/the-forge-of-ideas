@@ -1,14 +1,23 @@
 import type { Keyword, Screen } from './data';
+import { decodeGenerate, newGenerateProgress } from './stage2';
+import type { GenerateProgress } from './stage2';
+import { decodeSort, newSortProgress } from './stage3';
+import type { SortProgress } from './stage3';
+import { decodeConnect, newConnectProgress } from './stage4';
+import type { ConnectProgress } from './stage4';
 
 export const SAVE_KEY = 'forge-of-ideas:progress:v1';
 export const SETTINGS_KEY = 'forge-of-ideas:settings:v1';
 export type Save = {
   version: 1;
   name: string;
-  screen: Extract<Screen, 'prologue' | 'prepare' | 'journey'>;
+  screen: Extract<Screen, 'prologue' | 'prepare' | 'journey' | 'generate' | 'sort' | 'connect'>;
   prologueIndex: number;
   explored: Keyword[];
   completed: boolean;
+  generate: GenerateProgress;
+  sort: SortProgress;
+  connect: ConnectProgress;
 };
 export type Settings = { sound: boolean; reducedMotion: boolean; largeText: boolean };
 const validKeywords: Keyword[] = ['how', 'moment', 'tense'];
@@ -18,7 +27,7 @@ export function cleanName(value: string): string {
 }
 
 export function newSave(name: string): Save {
-  return { version: 1, name: cleanName(name), screen: 'prologue', prologueIndex: 0, explored: [], completed: false };
+  return { version: 1, name: cleanName(name), screen: 'prologue', prologueIndex: 0, explored: [], completed: false, generate: newGenerateProgress(), sort: newSortProgress(), connect: newConnectProgress() };
 }
 
 export function decodeSave(raw: string | null): Save | null {
@@ -28,13 +37,23 @@ export function decodeSave(raw: string | null): Save | null {
     if (!value || typeof value !== 'object') return null;
     const s = value as Partial<Save>;
     if (s.version !== 1 || typeof s.name !== 'string' || cleanName(s.name).length < 2) return null;
-    if (!['prologue', 'prepare', 'journey'].includes(s.screen ?? '')) return null;
+    if (!['prologue', 'prepare', 'journey', 'generate', 'sort', 'connect'].includes(s.screen ?? '')) return null;
     const explored = [...new Set((Array.isArray(s.explored) ? s.explored : []).filter((v): v is Keyword => validKeywords.includes(v)))];
+    const completed = s.completed === true && explored.length === 3;
+    const generate = completed ? decodeGenerate(s.generate) : newGenerateProgress();
+    const sort = completed ? decodeSort(s.sort, generate.selected) : newSortProgress();
+    if (!generate.completed) sort.completed = false;
+    const connect = decodeConnect(s.connect, generate.selected, sort.assignments);
+    if (!sort.completed) connect.completed = false;
+    let screen = s.screen as Save['screen'];
+    if ((screen === 'journey' && explored.length !== 3) || (['generate', 'sort', 'connect'].includes(screen) && !completed)) screen = 'prepare';
+    else if (['sort', 'connect'].includes(screen) && !generate.completed) screen = 'generate';
+    else if (screen === 'connect' && !sort.completed) screen = 'sort';
     return {
       version: 1, name: cleanName(s.name),
-      screen: s.screen === 'journey' && explored.length !== 3 ? 'prepare' : s.screen as Save['screen'],
+      screen,
       prologueIndex: Number.isInteger(s.prologueIndex) ? Math.max(0, Math.min(2, s.prologueIndex!)) : 0,
-      explored, completed: s.completed === true && explored.length === 3,
+      explored, completed, generate, sort, connect,
     };
   } catch { return null; }
 }

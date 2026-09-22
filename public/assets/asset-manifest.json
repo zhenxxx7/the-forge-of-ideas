@@ -3,5 +3,8 @@
   "study": "User-supplied landing-screen__bg.png, optimized to WebP without changing its composition",
   "raven": "Original user-supplied raven.svg and raven-beak-open.svg, copied unchanged",
   "icons": "Extracted from page 9 of the supplied PDF",
-  "logos": "Extracted from supplied reference artwork; no new institutional affiliation claimed"
+  "logos": "Extracted from supplied reference artwork; no new institutional affiliation claimed",
+  "stage2": "Portal backgrounds and transparent idea pouch prepared with the built-in imagegen tool from supplied PDF pages 10, 11 and 13. See docs/stage2-artwork.md for prompts and provenance.",
+  "stage3": "Clean sorting-room background prepared with built-in imagegen from supplied PDF page 16. Interactive ores are code-native SVGs; category belts and transitions are CSS. See docs/stage3-artwork.md.",
+  "stage4": "Clean connecting chamber prepared with built-in imagegen from supplied PDF page 19. Pairing, editable statements and animated crystals are native HTML/SVG/CSS. See docs/stage4-artwork.md."
 }

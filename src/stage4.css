@@ -1,0 +1,150 @@
+.screen-connect { background: #121c28; }
+.screen-connect .room-art { background-image: url('/assets/stage4-connecting-room.webp'); }
+.screen-connect .room-vignette { background: linear-gradient(#090e1b80, transparent 40%, #090f1830); }
+.screen-connect .scene-header { top: 4%; }
+.screen-connect .side-tools { top: 6%; }
+.screen-connect .raven-character.raven-guide { left: 0; bottom: 30%; width: 11%; height: 19%; }
+.connect-stage { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.connect-stage button, .connect-stage .ornate-panel, .connect-stage .dialogue-scroll, .connect-stage dialog { pointer-events: auto; }
+.connect-hud { position: absolute; top: 4%; left: 52%; transform: translateX(-50%); display: flex; align-items: center; gap: .8cqw; z-index: 7; }
+.connect-progress { display: flex; align-items: center; gap: .7cqw; border: 1px solid #af915c; border-radius: 3cqw; min-height: 4.25cqw; padding: .5cqw 1.2cqw; background: linear-gradient(#21343bec, #0b1420ed); color: #e8dcc1; box-shadow: inset 0 0 0 3px #b49a4525; }
+.connect-progress > svg { width: 1.8cqw; height: 1.8cqw; color: #9ce3d2; }
+.connect-progress > span { display: flex; flex-direction: column; text-align: left; }
+.connect-progress small { font: .48cqw 'Cinzel', serif; letter-spacing: .08em; color: #c3b294; }
+.connect-progress strong { font: 1.45cqw/1.4 'Volkhov', serif; white-space: nowrap; }
+.connect-progress strong span { font-size: .85cqw; color: #b8bbb4; }
+.connect-title { left: 32%; top: 24%; width: 36%; padding: 2.6cqw 2cqw 2cqw; background: linear-gradient(#101c2af2, #132431e8); }
+.connect-title h1 { font: 400 2.6cqw/1.3 'Volkhov', serif; margin: 1cqw 0 1.4cqw; color: #fff0ce; }
+.connect-title > p:last-of-type { font: italic .86cqw/1.7 Georgia, serif; color: #c2d1d2; margin: 1cqw 0; }
+.connect-inventory { top: 18%; width: 28%; max-height: 28%; padding: 1.2cqw; background: linear-gradient(#111d29ed, #10222cea); }
+.inventory-central { left: 8%; }.inventory-supporting { right: 8%; }
+.connect-inventory-heading { display: flex; justify-content: space-between; align-items: center; gap: .5cqw; padding: .3cqw 2.3cqw; margin-bottom: .7cqw; }
+.connect-inventory-heading h2 { margin: 0; font: .9cqw 'Volkhov', serif; color: #edd9b3; }
+.connect-inventory-heading > span { font: .6cqw 'Cinzel', serif; color: #b6c4c7; }
+.connect-inventory-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45cqw; }
+.connection-ore { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3cqw; padding: .45cqw .15cqw; min-width: 0; border: 1px solid #ac976c70; border-radius: 3px; background: linear-gradient(#26323cd4, #081322dc); color: #f2e5ce; touch-action: none; user-select: none; cursor: grab; }
+.connection-ore .sort-gem { width: 2cqw; height: 2.25cqw; }
+.connection-ore > span { font: .52cqw/1.4 'Cinzel', serif; overflow-wrap: anywhere; }
+.connection-ore:hover, .connection-ore.ore-in-receptacle { border-color: #f1d59b; background: #45535b; }
+.connection-ore.ore-being-dragged { opacity: .35; cursor: grabbing; }
+.linked-ore-check { position: absolute; right: .25cqw; top: .25cqw; width: .8cqw; height: .8cqw; color: #a2ebc3; }
+.inventory-empty { font: italic .85cqw/1.6 Georgia, serif; color: #c7bca3; }
+.connect-receptacle { position: absolute; top: 47%; width: 20%; height: 15%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25cqw; border-radius: 50%; border: 1px solid #c2a87855; background: radial-gradient(ellipse, #131d29e0, #10223280 65%, transparent); color: #fff0d4; pointer-events: auto; }
+.receptacle-central { left: 6%; }.receptacle-supporting { right: 5%; }
+.receptacle-label { font: .6cqw 'Cinzel', serif; letter-spacing: .07em; color: #e2d0a8; }
+.connect-receptacle .sort-gem { width: 3.3cqw; height: 3.6cqw; }
+.connect-receptacle strong { font: .8cqw 'Volkhov', serif; }
+.receptacle-empty { font: italic .8cqw/1.6 Georgia, serif; max-width: 70%; text-align: center; color: #ccc9c0; }
+.receptacle-clear { position: absolute; top: 20%; right: 8%; width: 1.6cqw; height: 1.6cqw; padding: .25cqw; border: 1px solid #a99574; border-radius: 50%; background: #152636; color: #eddbc0; }
+.receptacle-clear svg { width: 100%; height: 100%; }
+.receptacle-drag-over { outline: 2px solid #affff0; outline-offset: 4px; box-shadow: 0 0 24px #83d7ff75; }
+.chamber-visual { position: absolute; left: 43%; top: 21%; width: 14%; height: 31%; display: grid; place-items: center; }
+.connection-crystal { display: block; width: 100%; height: 100%; }
+.crystal-materialize { position: relative; width: 67%; height: 82%; animation: crystal-form .7s cubic-bezier(.2,.75,.3,1) both; }
+.crystal-materialize > .connection-crystal { position: relative; z-index: 1; animation: crystal-float 4s ease-in-out .7s infinite; filter: drop-shadow(0 0 10px #90e8c885); }
+.crystal-halo { position: absolute; inset: 10% -22%; background: radial-gradient(ellipse, #81f0d938, transparent 65%); }
+.chamber-spark { width: 3.2cqw; height: 3.2cqw; border: 1px solid #b5eaff80; border-radius: 50%; display: grid; place-items: center; color: #d8f9ff; background: #81b3e524; }
+.chamber-spark svg { width: 1.5cqw; height: 1.5cqw; }
+.connect-energy { position: absolute; inset: 0; opacity: .65; overflow: hidden; }
+.connect-energy i { position: absolute; top: 41%; width: 16%; height: 2px; background: linear-gradient(90deg, transparent, #a0e9ffb0, transparent); box-shadow: 0 0 14px #73d6ff; animation: chamber-current 4.5s ease-in-out infinite; transform-origin: center; }
+.energy-left { left: 28%; transform: rotate(14deg); }.energy-right { right: 28%; transform: rotate(-14deg); animation-delay: -2s !important; }
+@keyframes crystal-form { from { opacity: 0; transform: translateY(12px) scale(.7); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes crystal-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes chamber-current { 0%, 100% { opacity: .15; } 50% { opacity: .85; } }
+/* Pause ambience, but let an input-triggered formation finish so a new crystal stays visible. */
+.connect-motion-paused .connect-energy i, .connect-motion-paused .crystal-materialize > .connection-crystal { animation-play-state: paused; }
+.connection-member { top: 20%; width: 29%; height: 39%; padding: 1.45cqw; background: linear-gradient(#112330f2, #0c1624ed); text-align: left; overflow-y: auto; scrollbar-color: #947c56 #172331; }
+.member-main { left: 8%; }.member-support { right: 7%; }
+.connection-member .eyebrow { font-size: .65cqw; margin: 0 0 1cqw; padding-inline: 2cqw; }
+.member-main > .sort-gem { width: 3.8cqw; height: 4.2cqw; margin: .5cqw auto; }
+.connection-member h2 { color: #f0dec0; font: 1.2cqw 'Volkhov', serif; margin: .7cqw 0; }
+.connection-member p:not(.eyebrow) { font: .86cqw/1.7 Georgia, serif; color: #cbd4d3; margin: .6cqw 0; }
+.support-member { display: flex; gap: .65cqw; align-items: start; padding-bottom: .6cqw; margin-bottom: .6cqw; border-bottom: 1px solid #a08f622f; }
+.support-member .sort-gem { width: 1.8cqw; height: 2.2cqw; margin-top: .5cqw; }.support-member > div { flex: 1; min-width: 0; }
+.support-member h2 { font-size: .85cqw; margin: .3cqw 0; }.support-member p:not(.eyebrow) { font-size: .74cqw; margin: .3cqw 0; }
+.support-member .icon-button { flex-shrink: 0; width: 1.3cqw; height: 1.8cqw; padding: .1cqw; }.support-member .icon-button svg { width: 1cqw; height: 1cqw; }
+.member-support > .text-link { font-size: .75cqw; }.member-support > .text-link svg { width: 1cqw; height: 1cqw; }
+.connect-dialogue { bottom: 6%; min-height: 25%; }
+.connect-dialogue .dialogue-content { padding: 1.3cqw 3.7cqw; }
+.connect-dialogue .dialogue-topline { margin-bottom: .7cqw; }
+.connect-dialogue .speaker-label { font-size: .63cqw; letter-spacing: .05em; }.connect-dialogue .speaker-label svg { width: 1cqw; height: 1cqw; }
+.connect-dialogue .dialogue-copy { font-size: 1.2cqw; line-height: 1.65; }
+.connection-readout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.7cqw; }
+.connection-readout > div + div { padding-left: 1.7cqw; border-left: 1px solid #75552b40; }
+.connection-readout span { font: .57cqw 'Cinzel', serif; color: #7e5730; }
+.connection-readout p { font: 1cqw/1.6 Georgia, serif; margin: .4cqw 0 0; }
+.connection-hint { font: italic .73cqw/1.5 Georgia, serif; margin: .5cqw 0 0; color: #6b4b26; }
+.connect-dialogue-actions { display: flex; align-items: center; justify-content: space-between; gap: .6cqw; margin-top: .8cqw; }
+.connect-dialogue-actions > span { max-width: 45%; font: italic .65cqw/1.5 Georgia, serif; color: #694b2b; }
+.connect-dialogue-actions .gold-button { flex-shrink: 0; }
+.connection-writing label { display: block; font: .87cqw/1.5 Georgia, serif; margin-bottom: .45cqw; }
+.connection-writing textarea { display: block; width: 100%; height: 5cqw; resize: vertical; min-height: 3.7cqw; max-height: 7cqw; border: 1px solid #a17c4e; background: #fff6dd82; border-radius: 3px; padding: .65cqw .8cqw; font: .9cqw/1.5 Georgia, serif; color: #30251a; scrollbar-color: #917145 #e7cc9b; }
+.connection-writing textarea:focus-visible { outline: 2px solid #775224; outline-offset: 2px; }
+.connection-writing textarea::placeholder { color: #816743; }
+.connection-writing #connection-writing-help { display: flex; justify-content: space-between; gap: 1cqw; margin-top: .4cqw; font: .65cqw/1.5 Georgia, serif; color: #6a4c2a; }
+#connection-writing-help > span:last-child { white-space: nowrap; }
+.connect-back-sort { position: absolute; left: 8%; top: 13%; display: flex; gap: .4cqw; align-items: center; border: 0; background: #12212ac7; border-radius: 3px; padding: .4cqw .6cqw; font: .65cqw Georgia, serif; color: #d8c7a6; }
+.connect-back-sort svg { width: .8cqw; height: .8cqw; }
+.connect-missing { top: 34%; left: 30%; width: 40%; padding: 1.6cqw 2cqw; z-index: 5; background: #152632f7; box-shadow: 0 6px 25px #000a; }
+.connect-missing h2 { font: 1.35cqw/1.5 'Volkhov', serif; color: #f4ddb2; margin: .2cqw 0 .7cqw; }.connect-missing p { font: .84cqw/1.7 Georgia, serif; color: #d0d5cf; margin-bottom: 1cqw; }
+.connect-review-panel { top: 19%; left: 22%; width: 64%; height: 43%; padding: 1.6cqw 2cqw; background: linear-gradient(#112430f5, #0e1925f0); display: flex; flex-direction: column; }
+.connect-review-panel h1 { font: 2cqw/1.3 'Volkhov', serif; color: #f5dfb7; margin: .7cqw 0; }
+.connect-review-panel > p:not(.eyebrow) { font: .73cqw/1.5 Georgia, serif; color: #bccfcb; margin: .1cqw 0 .7cqw; }
+.connect-review-panel > .text-link { margin: .65cqw auto 0; font-size: .75cqw; }.connect-review-panel > .text-link svg { width: 1cqw; height: 1cqw; }
+.connection-list { min-height: 0; text-align: left; }
+.connect-review-panel > .connection-list { flex: 1; overflow-y: auto; padding-right: .8cqw; scrollbar-color: #ac9666 #152535; }
+.connection-list article { display: flex; gap: 1cqw; border-top: 1px solid #a3956545; padding: .7cqw 0; }
+.connection-list article > .connection-crystal { flex-shrink: 0; width: 2.5cqw; height: 3.7cqw; margin-top: .2cqw; }
+.connection-list article > div { flex: 1; min-width: 0; }
+.connection-list h3 { font: 1cqw 'Volkhov', serif; color: #f1dcb8; margin: 0 0 .3cqw; }
+.connection-pair-label { font: .66cqw/1.5 'Cinzel', serif; color: #94c5bd; margin: .2cqw 0; }
+.connection-explanation-preview { white-space: pre-wrap; overflow-wrap: anywhere; font: .84cqw/1.7 Georgia, serif; color: #ddd9ce; margin: .45cqw 0; }
+.connection-state { font: italic .68cqw/1.5 Georgia, serif; color: #a4d6b6; }.connection-needs-review .connection-state { color: #f0bd87; }
+.connection-item-actions { display: flex; align-items: center; justify-content: space-between; gap: 1cqw; margin-top: .5cqw; }
+.connection-item-actions .text-link { font-size: .73cqw; }.connection-item-actions .icon-button { width: 1.8cqw; height: 1.8cqw; }.connection-item-actions .icon-button svg { width: 1cqw; height: 1cqw; }
+.empty-connections { display: flex; align-items: center; justify-content: center; gap: 1cqw; color: #b2c5c8; font: italic .9cqw/1.7 Georgia, serif; padding: 1cqw; }
+.empty-connections > svg { flex-shrink: 0; }
+.connection-library { width: min(800px, calc(100vw - 32px)); }
+.connection-library .connection-list { margin: 22px 0; }.connection-library .connection-list article { padding: 20px 0; gap: 17px; }.connection-library .connection-list article > .connection-crystal { width: 40px; height: 58px; margin-top: 6px; }.connection-library .connection-list h3 { font-size: 18px; margin-bottom: 8px; }.connection-library .connection-pair-label { font-size: 10px; margin: 5px 0; }.connection-library .connection-explanation-preview { font-size: 14px; margin: 12px 0; }.connection-library .connection-state { font-size: 12px; }.connection-library .connection-item-actions { margin-top: 12px; gap: 16px; }.connection-library .connection-item-actions .text-link { font-size: 13px; }.connection-library .connection-item-actions .icon-button { width: 36px; height: 36px; }.connection-library .connection-item-actions .icon-button svg { width: 18px; height: 18px; }.connection-library .empty-connections { font-size: 14px; padding: 12px; gap: 12px; }
+.connect-drag-ghost { position: fixed; top: 0; left: 0; width: 40px; height: 48px; z-index: 50; pointer-events: none; will-change: transform; }
+.connect-drag-ghost .sort-gem { width: 100%; height: 100%; }
+.connected-journal > h3 { font-size: 17px; color: #eccb92; }.connected-journal > p { font: italic 12px/1.7 Georgia, serif; color: #b2a78f; }.connected-journal small { font: italic 11px/1.6 Georgia, serif; color: #b3c3ac; }.journal-statement { white-space: pre-wrap; overflow-wrap: anywhere; }
+.large-text .screen-connect .connect-dialogue { bottom: 6%; }
+.large-text .connect-dialogue .dialogue-copy { font-size: 1.4cqw; }
+.large-text .connection-readout p { font-size: 1.13cqw; }
+.large-text .connection-writing label { font-size: 1cqw; }.large-text .connection-writing textarea { font-size: 1.1cqw; }
+.reduced-motion .connect-energy i, .reduced-motion .crystal-materialize, .reduced-motion .crystal-materialize > .connection-crystal, .connect-still .connect-energy i, .connect-still .crystal-materialize, .connect-still .crystal-materialize > .connection-crystal { animation: none; }
+@media (prefers-reduced-motion: reduce) { .connect-energy i, .crystal-materialize, .crystal-materialize > .connection-crystal { animation: none; } }
+
+/* Portrait play keeps full-sized controls and a readable editor in a scrollable room. */
+@media (max-aspect-ratio: 11/10) {
+  .screen-connect { min-height: 1670px; height: auto; }
+  .screen-connect .room-art { background-size: auto 700px; background-position: 50% top; background-repeat: no-repeat; }
+  .screen-connect .room-vignette { background: linear-gradient(#0c192332, #14233030 30%, #121c28 45%); }
+  .screen-connect .scene-header { top: 30px; left: 5%; padding: 0; }.screen-connect .scene-header .eyebrow { font-size: 8px; }.screen-connect .scene-header p { font-size: 12px; }
+  .screen-connect .side-tools { top: 88px; right: 3%; gap: 8px; }.screen-connect .side-tools .round-button { width: 37px; height: 37px; }.screen-connect .side-tools .round-button svg { width: 18px; height: 18px; }.screen-connect .side-tools .round-button:nth-child(4) { display: grid; }
+  .connect-hud { top: 90px; left: 5%; transform: none; width: 77%; gap: 7px; }.connect-progress { min-height: 52px; padding: 7px 10px; gap: 7px; border-radius: 30px; flex: 1; }.connect-progress > svg { width: 20px; height: 20px; }.connect-progress small { font-size: 6px; }.connect-progress strong { font-size: 18px; }.connect-progress strong span { font-size: 10px; }
+  .connect-title { top: 265px; left: 10%; width: 80%; padding: 35px 25px; }.connect-title .eyebrow { font-size: 9px; }.connect-title h1 { font-size: 30px; margin: 17px 0 20px; }.connect-title > p:last-of-type { font-size: 12px; margin: 18px 0; }
+  .chamber-visual { top: 202px; left: 34%; width: 32%; height: 160px; }.chamber-spark { width: 40px; height: 40px; }.chamber-spark svg { width: 22px; height: 22px; }.connect-energy { display: none; }
+  .connect-inventory { top: 390px; left: 5%; right: auto; width: 90%; height: 230px; max-height: none; padding: 20px; }.inventory-supporting { top: 640px; }
+  .connect-inventory-heading { gap: 8px; margin-bottom: 12px; }.connect-inventory-heading h2 { font-size: 15px; }.connect-inventory-heading > span { font-size: 9px; }.connect-inventory-grid { gap: 7px; }.connection-ore { padding: 6px 2px; gap: 4px; min-height: 66px; }.connection-ore .sort-gem { width: 25px; height: 29px; }.connection-ore > span { font-size: 8px; }.linked-ore-check { top: 3px; right: 3px; width: 12px; height: 12px; }.inventory-empty { font-size: 12px; }
+  .connect-receptacle { top: 895px; width: 43%; height: 130px; gap: 6px; border-radius: 18px; background: radial-gradient(ellipse, #213e4b, #102232e6); }.receptacle-central { left: 5%; }.receptacle-supporting { right: 5%; }.receptacle-label { font-size: 8px; }.connect-receptacle .sort-gem { width: 35px; height: 41px; }.connect-receptacle strong { font-size: 12px; }.receptacle-empty { font-size: 12px; }.receptacle-clear { top: 26%; right: 3%; width: 27px; height: 27px; padding: 5px; }
+  .connection-member { top: 390px; left: 5%; right: auto; width: 90%; height: 200px; padding: 23px; }.member-support { top: 610px; height: 340px; }.connection-member .eyebrow { font-size: 9px; margin-bottom: 13px; }.member-main > .sort-gem { float: left; width: 38px; height: 49px; margin: 5px 17px 40px 0; }.connection-member h2 { font-size: 18px; margin: 10px 0; }.connection-member p:not(.eyebrow) { font-size: 13px; margin: 7px 0; }.support-member { gap: 9px; padding-bottom: 9px; margin-bottom: 9px; }.support-member .sort-gem { width: 23px; height: 30px; margin-top: 5px; }.support-member h2 { font-size: 13px; margin: 3px 0; }.support-member p:not(.eyebrow) { font-size: 12px; margin: 5px 0; }.support-member .icon-button { width: 26px; height: 30px; padding: 4px; }.support-member .icon-button svg { width: 17px; height: 17px; }.member-support > .text-link { font-size: 12px; }.member-support > .text-link svg { width: 14px; height: 14px; }
+  .connect-back-sort { top: 185px; left: 5%; gap: 6px; font-size: 11px; padding: 7px 9px; }.connect-back-sort svg { width: 13px; height: 13px; }
+  .connect-missing { top: 640px; left: 10%; width: 80%; padding: 25px; }.connect-missing h2 { font-size: 19px; margin: 0 0 12px; }.connect-missing p { font-size: 12px; margin-bottom: 16px; }.connect-missing .gold-button.small { min-height: 40px; font-size: 11px; }.connect-missing .gold-button.small > span { padding: 8px 12px; }
+  .connect-dialogue { top: 1050px; bottom: auto; left: 5%; width: 90%; min-height: 0; }.connect-dialogue .dialogue-content { padding: 25px 24px 30px; }.connect-dialogue .dialogue-topline { margin-bottom: 14px; gap: 12px; }.connect-dialogue .speaker-label { font-size: 8px; line-height: 1.5; }.connect-dialogue .speaker-label svg { width: 13px; height: 13px; }.connect-dialogue .dialogue-pagination { font-size: 7px; }.connect-dialogue .dialogue-copy { font-size: 14px; line-height: 1.7; }
+  .connection-readout { grid-template-columns: 1fr; gap: 14px; }.connection-readout > div + div { padding: 12px 0 0; border: 0; border-top: 1px solid #75552b40; }.connection-readout span { font-size: 8px; }.connection-readout p { font-size: 13px; margin-top: 6px; }.connection-hint { font-size: 11px; margin-top: 10px; }
+  .connect-dialogue-actions { flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 18px; }.connect-dialogue-actions > span { max-width: none; width: 100%; font-size: 11px; text-align: center; }.connect-dialogue-actions .gold-button.small { min-height: 40px; min-width: 190px; font-size: 11px; }.connect-dialogue-actions .gold-button.small > span { padding: 8px 13px; }.connect-dialogue-actions .gold-button svg { width: 14px; height: 14px; }
+  .connection-writing label { font-size: 13px; margin-bottom: 12px; }.connection-writing textarea { font-size: 16px; height: 130px; min-height: 110px; max-height: 170px; padding: 11px; }.connection-writing #connection-writing-help { font-size: 10px; gap: 10px; margin-top: 8px; }
+  .connect-dialogue .dialogue-navigation { right: -1%; bottom: -18px; }.connect-dialogue .dialogue-navigation .round-button { width: 36px; height: 36px; }.connect-dialogue .dialogue-navigation .round-button svg { width: 21px; height: 21px; }
+  .screen-connect .raven-character.raven-guide { width: 27%; height: 120px; left: -3%; top: 280px; bottom: auto; }
+  .connect-review-panel { top: 260px; left: 7%; width: 86%; height: 680px; padding: 25px 22px; }.connect-review-panel .eyebrow { font-size: 9px; }.connect-review-panel h1 { font-size: 25px; margin: 12px 0; }.connect-review-panel > p:not(.eyebrow) { font-size: 11px; margin-bottom: 14px; }.connect-review-panel > .text-link { font-size: 11px; margin-top: 14px; }.connect-review-panel > .text-link svg { width: 13px; height: 13px; }
+  .connect-review-panel > .connection-list { padding-right: 5px; }.connection-list article { gap: 10px; padding: 15px 0; }.connection-list article > .connection-crystal { width: 26px; height: 40px; margin-top: 5px; }.connection-list h3 { font-size: 16px; margin-bottom: 8px; }.connection-pair-label { font-size: 9px; margin: 5px 0; }.connection-explanation-preview { font-size: 12px; margin: 8px 0; }.connection-state { font-size: 10px; }.connection-item-actions { gap: 10px; margin-top: 9px; }.connection-item-actions .text-link { font-size: 11px; }.connection-item-actions .icon-button { width: 30px; height: 30px; }.connection-item-actions .icon-button svg { width: 16px; height: 16px; }.empty-connections { font-size: 12px; gap: 12px; padding: 12px; }
+  .screen-connect .utility-bar { bottom: 18px; }.screen-connect .save-indicator { bottom: 31px; }
+  .screen-connect.connect-phase-intro { min-height: 1120px; }.connect-phase-intro .connect-dialogue { top: 660px; }
+  .large-text .screen-connect { min-height: 1760px; }.large-text .screen-connect.connect-phase-intro { min-height: 1200px; }.large-text .screen-connect .connect-dialogue { bottom: auto; }.large-text .connect-dialogue .dialogue-copy { font-size: 17px; }.large-text .connection-readout p { font-size: 16px; }.large-text .connection-writing label { font-size: 15px; }.large-text .connection-writing textarea { font-size: 18px; }
+}
+@media (min-aspect-ratio: 11/10) and (max-width: 1000px) {
+  .connect-dialogue { bottom: 8%; }.large-text .screen-connect .connect-dialogue { bottom: 8%; }
+  .connect-dialogue .dialogue-content { padding-top: 1cqw; padding-bottom: 1cqw; }.connect-title { top: 22%; padding: 1.8cqw 2cqw; }.connect-title h1 { margin: .8cqw 0; }.connect-title .ornament { max-height: 2cqw; }
+}
