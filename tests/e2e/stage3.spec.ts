@@ -1,3 +1,4 @@
+import { openSettings, openJourney } from './helpers';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -10,9 +11,8 @@ async function enter(page: Page, sort?: Partial<SortProgress>) {
     localStorage.setItem('forge-of-ideas:progress:v1', JSON.stringify({ version: 1, name: 'Sean', screen: sort ? 'sort' : 'journey', prologueIndex: 2, explored: ['how', 'moment', 'tense'], completed: true, generate: { step: 'collected', selected: ideas, activeIdea: 'lifelike', completed: true }, ...(sort ? { sort } : {}) }));
   }, { ideas, sort });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Skip intro' }).click();
   await page.getByRole('button', { name: 'Continue your journey' }).click();
-  if (!sort) await page.getByRole('button', { name: 'Start Stage 3', exact: true }).click();
+  if (!sort) await page.getByRole('button', { name: 'Continue to Sort', exact: true }).click();
 }
 async function saved(page: Page) { return page.evaluate(() => JSON.parse(localStorage.getItem('forge-of-ideas:progress:v1')!).sort as SortProgress); }
 async function place(page: Page, label: string, category: string) {
@@ -29,7 +29,7 @@ test('Stage 2 pouch becomes editable sorting belts, completion, notes and saved 
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-stage3-intro.png`, fullPage: true, animations: 'disabled' });
   await page.getByRole('button', { name: 'Start sorting', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Unsorted ideas', exact: true }).getByRole('button')).toHaveCount(4);
-  await expect(page.getByRole('button', { name: 'Review sorting', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Complete Stage 3', exact: true })).toBeDisabled();
   await place(page, 'Lifelike AI', 'Central');
   await place(page, 'Lifelike AI', 'Irrelevant');
   await page.getByRole('button', { name: 'Undo last move', exact: true }).click();
@@ -44,13 +44,11 @@ test('Stage 2 pouch becomes editable sorting belts, completion, notes and saved 
   await page.getByRole('button', { name: 'Review sorted ideas, 4 of 4', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('AI is becoming more lifelike.');
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Review sorting', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'A clearer way forward.' })).toBeVisible();
-  await page.screenshot({ path: `artifacts/${testInfo.project.name}-stage3-review.png`, fullPage: true, animations: 'disabled' });
+    await page.screenshot({ path: `artifacts/${testInfo.project.name}-stage3-review.png`, fullPage: true, animations: 'disabled' });
   await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Sort', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open Connect', exact: true })).toBeVisible();
-  await expect(page.getByLabel('Elaborate, locked', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Locked Elaborate', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Quest journal', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Stage 3 completed.');
   const downloadEvent = page.waitForEvent('download');
@@ -59,11 +57,9 @@ test('Stage 2 pouch becomes editable sorting belts, completion, notes and saved 
   expect(notes).toContain('Stage 3: Sort'); expect(notes).toContain('IRRELEVANT\nAI is becoming more lifelike.'); expect(notes).toContain('Stage 3 completed.');
   await page.keyboard.press('Escape');
   await page.reload();
-  await page.getByRole('button', { name: 'Skip intro' }).click();
   await page.getByRole('button', { name: 'Continue your journey' }).click();
   await page.getByRole('button', { name: 'Review Sort', exact: true }).click();
-  await page.getByRole('button', { name: 'Reconsider ideas', exact: true }).click();
-  await place(page, 'Lifelike AI', 'Supporting');
+    await place(page, 'Lifelike AI', 'Supporting');
   expect((await saved(page)).completed).toBe(false);
   expect((await saved(page)).assignments.lifelike).toBe('supporting');
   expect(errors).toEqual([]);
@@ -101,9 +97,11 @@ test('timer pauses for menus and hidden tabs; partial expiry recovers untimed', 
   await page.clock.pauseAt(new Date(Date.now() + 100));
   await page.clock.runFor(1500);
   const initial = (await saved(page)).remainingMs;
+  await page.locator('.forge-timer').hover();
   await page.getByRole('button', { name: 'Pause timer', exact: true }).click();
   const manual = (await saved(page)).remainingMs;
   await page.clock.fastForward(5000); expect((await saved(page)).remainingMs).toBe(manual);
+  await page.locator('.forge-timer').hover();
   await page.getByRole('button', { name: 'Resume timer', exact: true }).click();
   await page.clock.runFor(1500); expect((await saved(page)).remainingMs).toBeLessThan(initial);
   await page.getByRole('button', { name: 'Review sorted ideas, 1 of 4', exact: true }).click();
@@ -114,14 +112,14 @@ test('timer pauses for menus and hidden tabs; partial expiry recovers untimed', 
   const hidden = (await saved(page)).remainingMs;
   await page.clock.fastForward(10_000); expect((await saved(page)).remainingMs).toBe(hidden);
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { value: false, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openSettings(page);
   const settings = (await saved(page)).remainingMs;
   await page.clock.fastForward(10_000); expect((await saved(page)).remainingMs).toBe(settings);
   await page.keyboard.press('Escape');
   await page.clock.fastForward(30_000);
-  await expect(page.getByRole('heading', { name: 'A few ideas need a place.' })).toBeVisible();
+  await expect(page.locator('.sort-phase-review')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Complete Stage 3', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Continue untimed', exact: true }).click();
+  await page.getByRole('button', { name: 'Sort without a timer', exact: true }).click();
   await expect(page.getByRole('timer')).toHaveText('Untimed');
   expect((await saved(page)).assignments).toEqual({ lifelike: 'irrelevant' });
   await page.clock.fastForward(120_000); await expect(page.getByRole('timer')).toHaveText('Untimed');
@@ -131,15 +129,15 @@ test('timer pauses for menus and hidden tabs; partial expiry recovers untimed', 
 
 test('revising the Stage 2 pouch keeps retained assignments and reopens sorting', async ({ page }) => {
   await enter(page, { step: 'review', completed: true, assignments: { lifelike: 'irrelevant', setting: 'central', senses: 'supporting', reactions: 'supporting' } });
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
+  await openJourney(page);
   await page.getByRole('button', { name: 'Review Generate', exact: true }).click();
-  await page.getByRole('button', { name: 'Gather more ideas', exact: true }).click();
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
   await page.getByRole('button', { name: 'Explore Lifelike AI', exact: true }).click();
   await page.getByRole('button', { name: 'In your pouch', exact: true }).click();
   await page.getByRole('button', { name: 'Explore Pace', exact: true }).click();
   await page.getByRole('button', { name: 'Collect idea', exact: true }).click();
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
-  await expect(page.getByLabel('Sort, locked', { exact: true })).toBeVisible();
+  await openJourney(page);
+  await expect(page.getByLabel('Locked Sort', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Open Generate', exact: true }).click();
   await page.getByRole('button', { name: 'Review my pouch', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Stage 2', exact: true }).click();

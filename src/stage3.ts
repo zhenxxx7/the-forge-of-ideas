@@ -45,7 +45,7 @@ export function decodeSort(value: unknown, ideas: readonly IdeaId[]): SortProgre
   if (step === 'sorting' && remainingMs === 0 && !untimed) step = 'review';
   const progress: SortProgress = {
     step, assignments, remainingMs, untimed,
-    activeIdea: data.activeIdea && ideas.includes(data.activeIdea) ? data.activeIdea : ideas.find(id => !assignments[id]) ?? ideas[0] ?? null,
+    activeIdea: data.activeIdea && ideas.includes(data.activeIdea) ? data.activeIdea : null,
     timerPaused: data.timerPaused === true, completed: false,
   };
   return { ...progress, completed: data.completed === true && allIdeasSorted(progress, ideas) };

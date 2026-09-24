@@ -1,3 +1,4 @@
+import { openSettings } from './helpers';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -12,9 +13,8 @@ async function enter(page: Page, generate?: Partial<GenerateProgress>) {
     }));
   }, generate);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Skip intro' }).click();
   await page.getByRole('button', { name: 'Continue your journey' }).click();
-  if (!generate) await page.getByRole('button', { name: 'Start Stage 2', exact: true }).click();
+  if (!generate) await page.getByRole('button', { name: 'Continue to Generate', exact: true }).click();
 }
 
 async function remaining(page: Page) {
@@ -50,12 +50,12 @@ test('complete Stage 2, review the map, revisit ideas, resume and download notes
   await page.getByRole('button', { name: 'Review my pouch', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your ideas take form.' })).toBeVisible();
   await expect(page.locator('.collected-pouch img')).toBeVisible();
-  expect(await page.locator('.collected-pouch img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy();
+  await expect.poll(() => page.locator('.collected-pouch img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy();
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-stage2-collected.png`, animations: 'disabled', fullPage: true });
   await page.getByRole('button', { name: 'Complete Stage 2', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Generate', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open Sort', exact: true })).toBeVisible();
-  await expect(page.getByLabel('Connect, locked', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Locked Connect', { exact: true })).toBeVisible();
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-stage2-review.png`, animations: 'disabled' });
   await page.getByRole('button', { name: 'Quest journal', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Stage 2 completed.');
@@ -64,16 +64,15 @@ test('complete Stage 2, review the map, revisit ideas, resume and download notes
   const download = await downloadEvent;
   const notes = await readFile((await download.path())!, 'utf8');
   expect(notes).toContain('Stage 2: Generate');
-  expect(notes).toContain('[Mockup idea] AI is becoming more lifelike.');
+  expect(notes).toContain('[General knowledge] AI is becoming more lifelike.');
   expect(notes).toContain('Stage 2 completed.');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Review Generate', exact: true }).click();
-  await page.getByRole('button', { name: 'Gather more ideas', exact: true }).click();
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
   await page.getByRole('button', { name: 'Explore Uncertainty', exact: true }).click();
   await page.getByRole('button', { name: 'Collect idea', exact: true }).click();
   await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.reload();
-  await page.getByRole('button', { name: 'Skip intro' }).click();
   await page.getByRole('button', { name: 'Continue your journey' }).click();
   await expect(page.getByRole('button', { name: 'Open idea pouch, 5 collected' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Not knowing what will happen next can create suspense.' })).toBeVisible();
@@ -88,14 +87,16 @@ test('timer respects manual pause, menus, hidden tabs, untimed mode and expiry',
   const before = await remaining(page);
   await page.clock.runFor(2500);
   expect(await remaining(page)).toBeLessThan(before - 1900);
+  await page.locator('.forge-timer').hover();
   await page.getByRole('button', { name: 'Pause timer', exact: true }).click();
   const manualPause = await remaining(page);
   await page.clock.runFor(5000);
   expect(await remaining(page)).toBe(manualPause);
+  await page.locator('.forge-timer').hover();
   await page.getByRole('button', { name: 'Resume timer', exact: true }).click();
   await page.clock.runFor(1500);
   expect(await remaining(page)).toBeLessThan(manualPause);
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openSettings(page);
   const menuPause = await remaining(page);
   await page.clock.runFor(5000);
   expect(await remaining(page)).toBe(menuPause);
@@ -115,7 +116,7 @@ test('timer respects manual pause, menus, hidden tabs, untimed mode and expiry',
   await expect(page.getByRole('heading', { name: 'Your ideas take form.' })).toBeVisible();
   await expect(page.getByRole('timer')).toHaveText('00:00');
   await expect(page.getByRole('button', { name: 'Review 1 collected ideas' })).toBeVisible();
-  await page.getByRole('button', { name: 'Gather more ideas', exact: true }).click();
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
   await expect(page.getByRole('timer')).toHaveText('Untimed');
   await expect(page.getByRole('button', { name: 'Open idea pouch, 1 collected' })).toBeVisible();
 });
@@ -127,7 +128,7 @@ test('an empty timeout never claims completion and offers untimed recovery', asy
   await page.clock.runFor(15_000);
   await expect(page.getByRole('heading', { name: 'A spark is still waiting.' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Complete Stage 2', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Explore without a timer', exact: true }).click();
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
   await expect(page.getByRole('timer')).toHaveText('Untimed');
   await page.getByRole('button', { name: 'Collect idea', exact: true }).click();
   await page.getByRole('button', { name: 'Review my pouch', exact: true }).click();

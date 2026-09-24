@@ -1,3 +1,4 @@
+import { openJourney } from './helpers';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -58,7 +59,7 @@ test('miss, retry, hit and complete Stage 6; reload and notes preserve the resul
   await expect(page.getByRole('heading', { name: 'The Beast retreats.', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Complete Stage 6', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'A journey well forged.', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
+  await openJourney(page);
   await expect(page.getByRole('button', { name: 'Review Challenge', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open Archival Hall', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Quest journal', exact: true }).click();
@@ -79,13 +80,14 @@ test('miss, retry, hit and complete Stage 6; reload and notes preserve the resul
 test('three infusions support a miss followed by two hits; pointer and keyboard aiming work', async ({ page }) => {
   await enter(page, 3);
   await beginAim(page);
-  await expect(page.getByText('3 ready to throw', { exact: true })).toBeVisible();
+  await expect(page.locator('.challenge-stock-list button:enabled')).toHaveCount(3);
   await page.getByRole('button', { name: 'Select infusion: The setting', exact: true }).click();
   await page.getByRole('button', { name: 'Launch infusion', exact: true }).click();
   await expect.poll(async () => (await saved(page)).confusion).toBe(1);
-  await expect(page.getByText('2 ready to throw', { exact: true })).toBeVisible();
+  await expect(page.locator('.challenge-stock-list button:enabled')).toHaveCount(2);
   await page.getByRole('button', { name: 'Select infusion: Uncertainty', exact: true }).click();
-  await page.getByRole('button', { name: 'Aim in the battlefield', exact: true }).click();
+  const field = (await page.locator('.game-frame').boundingBox())!;
+  await page.mouse.click(field.x + field.width * .5, field.y + (field.width < 600 ? 280 : field.height * .35));
   await expect(page.getByRole('slider', { name: /Horizontal aim/ })).toHaveValue('50');
   await page.getByRole('button', { name: 'Launch infusion', exact: true }).click();
   await expect.poll(async () => (await saved(page)).hits).toBe(1);
@@ -96,16 +98,29 @@ test('three infusions support a miss followed by two hits; pointer and keyboard 
   expect(await saved(page)).toMatchObject({ hits: 2, confusion: 1, completed: true });
 });
 
+test('enabling system reduced motion during a throw still resolves the encounter', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await enter(page);
+  await beginAim(page);
+  await page.getByRole('button', { name: 'Select infusion: The setting', exact: true }).click();
+  await page.getByRole('slider', { name: /Horizontal aim/ }).fill('50');
+  await page.getByRole('button', { name: 'Launch infusion', exact: true }).click();
+  await expect(page.locator('.challenge-shot')).toBeVisible();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(page.getByRole('heading', { name: 'The Beast retreats.', exact: true })).toBeVisible();
+  expect((await saved(page)).completed).toBe(true);
+});
+
 test('revising Stage 5 invalidates Stage 6 victory without losing authored prose', async ({ page }) => {
   await enter(page, 1, { step: 'won', selected: null, used: ['setting'], aim: 50, hits: 1, confusion: 0, lastOutcome: 'hit', completed: true });
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
+  await openJourney(page);
   await page.getByRole('button', { name: 'Review Elaborate', exact: true }).click();
   await page.getByRole('button', { name: 'Inspect infusion: The setting', exact: true }).click();
   await page.getByRole('button', { name: 'Edit infusion', exact: true }).click();
   const revised = writing + ' I would also discuss the reader’s expectation.';
   await page.getByRole('textbox', { name: /Write how your evidence/ }).fill(revised);
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
-  await expect(page.getByLabel('Challenge, locked', { exact: true })).toBeVisible();
+  await openJourney(page);
+  await expect(page.getByLabel('Locked Challenge', { exact: true })).toBeVisible();
   expect((await saved(page)).completed).toBe(false);
   await page.getByRole('button', { name: 'Open Elaborate', exact: true }).click();
   await page.getByRole('button', { name: 'Review infusions', exact: true }).click();

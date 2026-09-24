@@ -7,7 +7,6 @@ test('touch gestures place an ore on a belt without scrolling the gesture', asyn
     localStorage.setItem('forge-of-ideas:progress:v1', JSON.stringify({ version: 1, name: 'Sean', screen: 'sort', completed: true, explored: ['how', 'moment', 'tense'], generate: { selected: ['lifelike', 'setting'], completed: true }, sort: { step: 'sorting', timerPaused: true } }));
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Skip intro' }).click();
   await page.getByRole('button', { name: 'Continue your journey' }).click();
   await page.evaluate(() => window.scrollTo(0, 180));
   const source = (await page.getByRole('button', { name: 'Select Lifelike AI', exact: true }).boundingBox())!;

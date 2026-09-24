@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
-import { ArrowLeft, ArrowRight, Bird, Check, ChevronLeft, ChevronRight, Compass, Download, Feather, Home, LockKeyhole, Maximize, Minimize, RotateCcw, ScrollText, Settings2, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import type { FormEvent, KeyboardEvent, ReactNode } from 'react';
+import { ArrowLeft, ArrowRight, Bird, Check, ChevronLeft, ChevronRight, Download, Feather, LockKeyhole, Maximize, Minimize, RotateCcw, Settings2, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { KEYWORDS, STAGES, prologue } from './data';
 import type { Keyword, Screen } from './data';
 import { cleanName, newSave, persistSave, readSave, readSettings, SETTINGS_KEY } from './state';
@@ -29,11 +29,15 @@ import type { ChallengeProgress } from './stage6';
 import { EndingStage } from './components/EndingStage';
 import { reconcileEnding } from './ending';
 import type { EndingProgress } from './ending';
+import { SCRIPT, RECAPS, introduction } from './storyboard';
+import { Quill } from './components/RuneGlyph';
+import { StoryIcon } from './components/StoryIcon';
+import { formatGenerateTime } from './stage2';
 
 type Overlay = 'help' | 'journal' | 'settings' | 'restart' | 'complete' | null;
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('splash');
+  const [screen, setScreen] = useState<Screen>('landing');
   const [save, setSave] = useState<Save | null>(readSave);
   const [settings, setSettings] = useState<Settings>(readSettings);
   const [overlay, setOverlay] = useState<Overlay>(null);
@@ -52,17 +56,16 @@ export default function App() {
   const allExplored = explored.length === 3;
   const pages = prologue(save?.name ?? 'adventurer');
   const dialogueIndex = save?.prologueIndex ?? 0;
+  const latestComplete = save?.generate.completed ? save.sort.completed ? save.connect.completed ? save.elaborate.completed ? save.challenge.completed ? 6 : 5 : 4 : 3 : 2 : 1;
+  const recapStage = Math.min(save?.journeyStage ?? 1, latestComplete);
+  const recapNext: Screen = recapStage <= 1 ? 'generate' : recapStage === 2 ? 'sort' : recapStage === 3 ? 'connect' : recapStage === 4 ? 'elaborate' : recapStage === 5 ? 'challenge' : 'ending';
+  const recapPrevious: Screen = recapStage <= 1 ? 'prepare' : recapStage === 2 ? 'generate' : recapStage === 3 ? 'sort' : recapStage === 4 ? 'connect' : recapStage === 5 ? 'elaborate' : 'challenge';
   const currentKeyword = KEYWORDS.find((keyword) => keyword.id === activeKeyword);
   const stage2Complete = save?.generate.completed === true;
   const stage3Complete = stage2Complete && save?.sort.completed === true;
   const stage4Complete = stage3Complete && save?.connect.completed === true;
   const stage5Complete = stage4Complete && save?.elaborate.completed === true;
   const stage6Complete = stage5Complete && save?.challenge.completed === true;
-  const generateLabel = stage2Complete ? 'Review Stage 2' : save?.generate.step === 'entrance' ? 'Start Stage 2' : 'Continue Stage 2';
-  const sortLabel = stage3Complete ? 'Review Stage 3' : save?.sort.step === 'intro' ? 'Start Stage 3' : 'Continue Stage 3';
-  const connectLabel = stage4Complete ? 'Review Stage 4' : save?.connect.step === 'intro' ? 'Start Stage 4' : 'Continue Stage 4';
-  const elaborateLabel = stage5Complete ? 'Review Stage 5' : save?.elaborate.step === 'intro' ? 'Start Stage 5' : 'Continue Stage 5';
-  const challengeLabel = stage6Complete ? 'Review Stage 6' : save?.challenge.step === 'intro' ? 'Start Stage 6' : 'Continue Stage 6';
   const updateGenerate = useCallback((update: (current: GenerateProgress) => GenerateProgress) => {
     setSave(current => {
       if (!current?.completed) return current;
@@ -154,7 +157,7 @@ export default function App() {
     setScreen(next);
     setActiveKeyword(null);
     if (next === 'prologue' || next === 'prepare' || next === 'journey' || next === 'generate' || next === 'sort' || next === 'connect' || next === 'elaborate' || next === 'challenge' || next === 'ending') {
-      setSave((current) => current ? { ...current, screen: next } : current);
+      setSave((current) => current ? { ...current, screen: next, ...(next === 'connect' && current.connect.step === 'review' ? { connect: { ...current.connect, step: current.connect.connections.length ? 'explain' : 'intro', mainIdea: current.connect.mainIdea ?? current.connect.connections[0]?.main ?? null } } : {}) } : current);
     }
   }
 
@@ -185,56 +188,54 @@ export default function App() {
     playSound(fresh ? 'chime' : 'click');
   }
 
-  function nextDialogue() {
-    if (dialogueIndex < pages.length - 1) {
-      setSave((current) => current ? { ...current, prologueIndex: current.prologueIndex + 1 } : current);
-      playSound();
-    } else go('prepare');
+  function inspectKeywordWithKeyboard(event: KeyboardEvent<HTMLElement>, id: Keyword) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    chooseKeyword(id);
   }
 
+  function nextDialogue() { go('prepare'); }
+
   function previousDialogue() {
-    if (dialogueIndex > 0) {
-      setSave((current) => current ? { ...current, prologueIndex: current.prologueIndex - 1 } : current);
-      playSound();
-    } else { setEditingName(true); setNameInput(save?.name ?? ''); go('name'); }
+    setEditingName(true); setNameInput(save?.name ?? ''); go('name');
   }
 
   function complete() {
     if (!allExplored) return;
-    setSave((current) => current ? { ...current, completed: true, screen: 'journey' } : current);
-    setOverlay('complete');
+    setSave((current) => current ? { ...current, completed: true, screen: 'journey', journeyStage: 1 } : current);
+    setScreen('journey');
     playSound('chime');
   }
 
   function completeGenerate() {
     if (!save?.generate.selected.length) return;
-    setSave(current => current ? { ...current, screen: 'journey', generate: { ...current.generate, step: 'collected', completed: true } } : current);
+    setSave(current => current ? { ...current, screen: 'journey', journeyStage: 2, generate: { ...current.generate, step: 'collected', completed: true } } : current);
     setScreen('journey');
-    setToast('Stage 2 complete. Sorting Ideas is now open.');
+    setToast('');
     playSound('chime');
   }
 
   function completeSort() {
     if (!save?.generate.completed || !allIdeasSorted(save.sort, save.generate.selected)) return;
-    setSave(current => current ? { ...current, screen: 'journey', sort: { ...current.sort, step: 'review', completed: true } } : current);
+    setSave(current => current ? { ...current, screen: 'journey', journeyStage: 3, sort: { ...current.sort, step: 'review', completed: true } } : current);
     setScreen('journey');
-    setToast('Stage 3 complete. Connecting Ideas is now open.');
+    setToast('');
     playSound('chime');
   }
 
   function completeConnect() {
     if (!save || !stage3Complete || !connectionsReady(save.connect, save.generate.selected, save.sort.assignments)) return;
-    setSave(current => current ? { ...current, screen: 'journey', connect: { ...current.connect, step: 'review', completed: true } } : current);
+    setSave(current => current ? { ...current, screen: 'journey', journeyStage: 4, connect: { ...current.connect, step: 'explain', completed: true } } : current);
     setScreen('journey');
-    setToast('Stage 4 complete. Elaborating on Ideas is now open.');
+    setToast('');
     playSound('chime');
   }
 
   function completeElaborate() {
     if (!save || !stage4Complete || !infusionsReady(save.elaborate, save.connect, save.generate.selected, save.sort.assignments)) return;
-    setSave(current => current ? { ...current, screen: 'journey', elaborate: { ...current.elaborate, step: 'review', completed: true } } : current);
+    setSave(current => current ? { ...current, screen: 'journey', journeyStage: 5, elaborate: { ...current.elaborate, step: 'review', completed: true } } : current);
     setScreen('journey');
-    setToast('Stage 5 complete. The Beast challenge is now open.');
+    setToast('');
     playSound('chime');
   }
 
@@ -242,7 +243,7 @@ export default function App() {
     if (!save || !stage5Complete || !save.challenge.completed || save.challenge.hits < targetHits(readyInfusions(save.elaborate, save.connect, save.generate.selected, save.sort.assignments).length)) return;
     setSave(current => current ? { ...current, screen: 'ending', ending: { ...current.ending, step: 'portal' }, challenge: { ...current.challenge, step: 'won', completed: true } } : current);
     setScreen('ending');
-    setToast('Stage 6 complete. The way to the Archival Hall is open.');
+    setToast('');
     playSound('chime');
   }
 
@@ -315,26 +316,23 @@ export default function App() {
   let dialogue: ReactNode;
   let dialogueLabel = 'YOUR RAVEN GUIDE';
   if (screen === 'prologue') {
-    dialogue = <p key={dialogueIndex} className="dialogue-copy text-enter">{pages[dialogueIndex].text}</p>;
+    dialogue = <p key={dialogueIndex} className="dialogue-copy text-enter">{introduction(save?.name ?? 'Sean')}</p>;
   } else if (screen === 'prepare') {
     dialogueLabel = currentKeyword ? currentKeyword.title.toUpperCase() : 'YOUR FIRST QUEST';
     dialogue = <div className="text-enter" key={activeKeyword ?? 'default'}>
-      <p className="dialogue-copy">{currentKeyword?.explanation ?? 'It’s time to prepare for your quest. Let’s uncover some things you will need to look out for. Select each key phrase in the question above to discover what it asks of you.'}</p>
+      <p className="dialogue-copy">{currentKeyword?.explanation ?? SCRIPT.prepare}</p>
       {allExplored && <p className="dialogue-hint success"><Check size={16} /> All three key phrases explored. You’re ready to see the journey ahead.</p>}
     </div>;
   } else {
-    dialogue = <>
-      <p className="dialogue-copy">{stage6Complete ? `The Beast has retreated, ${save?.name}. Your ideas and writing are still yours to revisit and refine.` : stage5Complete ? `Your crystal infusions are ready, ${save?.name}. Take them into the Beast encounter, or return to Elaborate to refine your response.` : stage4Complete ? `Your ideas have taken a stronger form, ${save?.name}. Select Elaborate to deepen a crystal with your own writing. You can return to earlier stages whenever your thinking changes.` : stage3Complete ? `You have considered how each idea relates to the question, ${save?.name}. Now connect a central idea with supporting ideas and explain the relationship. Your writing will give each crystal its meaning.` : stage2Complete ? `You have gathered ${save?.generate.selected.length} ideas, ${save?.name}. Now sort them into central, supporting, and irrelevant ideas. You can always return to Generate to reconsider your pouch.` : `Well prepared, ${save?.name}. Every strong response begins with understanding the question. Your next steps will turn a spark of an idea into something extraordinary.`}</p>
-      <div className="journey-finish"><span>{stage6Complete ? <><Feather size={14} /> {save?.ending.completed ? 'Journey complete. Revisit your record.' : 'The Archival Hall is open.'}</> : stage5Complete ? <><Feather size={14} /> Challenge is open. Face the Beast.</> : stage4Complete ? <><Feather size={14} /> Elaborate is open. Deepen your ideas.</> : stage3Complete ? <><Feather size={14} /> Connect is open. Bring ideas together.</> : stage2Complete ? <><Feather size={14} /> Sort is open. Find what matters.</> : <><Feather size={14} /> {save?.completed ? 'Generate is open. Gather your ideas.' : 'Complete Prepare to unlock Generate.'}</>}</span><GoldButton onClick={stage6Complete ? () => go('ending') : stage5Complete ? () => go('challenge') : stage4Complete ? () => go('elaborate') : stage3Complete ? () => go('connect') : stage2Complete ? () => go('sort') : save?.completed ? () => go('generate') : complete} className="small">{stage6Complete ? save?.ending.completed ? 'Revisit the ending' : 'Continue to the ending' : stage5Complete ? challengeLabel : stage4Complete ? elaborateLabel : stage3Complete ? connectLabel : stage2Complete ? sortLabel : save?.completed ? generateLabel : 'Complete Stage 1'} <ArrowRight /></GoldButton></div>
-    </>;
+    dialogue = <><p className="dialogue-copy">{RECAPS[recapStage]}</p><div className="journey-finish"><GoldButton onClick={() => go(recapNext)} className="small">Continue to {recapNext === 'ending' ? 'the ending' : STAGES.find(stage => stage.id === recapNext)?.name} <ArrowRight /></GoldButton></div></>;
   }
 
-  return <main className={`app ${settings.reducedMotion ? 'reduced-motion' : ''} ${settings.largeText ? 'large-text' : ''}`}>
+  return <main className={`app storyboard-game ${settings.reducedMotion ? 'reduced-motion' : ''} ${settings.largeText ? 'large-text' : ''}`}>
     <div className={`game-frame screen-${screen} ${screen === 'generate' ? `generate-${save?.generate.step}` : screen === 'sort' ? `sort-phase-${save?.sort.step}` : screen === 'connect' ? `connect-phase-${save?.connect.step}` : screen === 'elaborate' ? `elaborate-phase-${save?.elaborate.step}` : screen === 'challenge' ? `challenge-phase-${save?.challenge.step}` : screen === 'ending' ? `ending-phase-${save?.ending.step}` : ''}`} ref={gameFrame} data-testid="game-frame">
       <div className="room-art" aria-hidden="true" />
       <div className="room-vignette" aria-hidden="true" />
       {screen !== 'splash' && screen !== 'generate' && screen !== 'sort' && screen !== 'connect' && screen !== 'elaborate' && screen !== 'challenge' && screen !== 'ending' && <Atmosphere reducedMotion={settings.reducedMotion} />}
-      {screen !== 'splash' && screen !== 'name' && <Raven reducedMotion={settings.reducedMotion} landing={screen === 'landing'} speakingKey={active ? screen === 'ending' ? `ending-${save?.ending.step}` : screen === 'challenge' ? `challenge-${save?.challenge.step}-${save?.challenge.lastOutcome}` : screen === 'elaborate' ? `elaborate-${save?.elaborate.step}-${save?.elaborate.activeMain}` : screen === 'connect' ? `connect-${save?.connect.step}-${save?.connect.mainIdea}-${save?.connect.supportingIdea}` : screen === 'sort' ? `sort-${save?.sort.step}-${save?.sort.activeIdea}` : screen === 'generate' ? `generate-${save?.generate.step}-${save?.generate.activeIdea}` : `${screen}-${dialogueIndex}-${activeKeyword ?? ''}` : null} />}
+      {screen !== 'splash' && screen !== 'name' && <Raven sceneKey={screen} reducedMotion={settings.reducedMotion} landing={screen === 'landing'} speakingKey={active ? screen === 'ending' ? `ending-${save?.ending.step}` : screen === 'challenge' ? `challenge-${save?.challenge.step}-${save?.challenge.lastOutcome}` : screen === 'elaborate' ? `elaborate-${save?.elaborate.step}-${save?.elaborate.activeMain}` : screen === 'connect' ? `connect-${save?.connect.step}-${save?.connect.mainIdea}-${save?.connect.supportingIdea}` : screen === 'sort' ? `sort-${save?.sort.step}-${save?.sort.activeIdea}` : screen === 'generate' ? `generate-${save?.generate.step}-${save?.generate.activeIdea}` : `${screen}-${dialogueIndex}-${activeKeyword ?? ''}` : null} />}
 
       {screen === 'splash' ? <div className="splash-screen">
         <div className="splash-brand"><img src="/assets/cpdd.png" alt="Curriculum Planning and Development Division logo" /><p>CURRICULUM PLANNING &<br />DEVELOPMENT DIVISION</p><span>presents</span></div>
@@ -342,7 +340,8 @@ export default function App() {
       </div> : <>
         {screen === 'landing' && <section className="landing-content scene-enter" aria-label="Welcome to The Forge of Ideas">
           <img className="moe-crest" src="/assets/moe.webp" alt="Ministry of Education, Singapore" />
-          <div className="hero-title"><p className="title-the">The</p><h1 ref={heading} tabIndex={-1}>Forge of Ideas</h1><p className="hero-kicker">A LITERARY ADVENTURE</p></div>
+          <div className="hero-title"><h1 ref={heading} tabIndex={-1} className="sr-only">Forge of Ideas</h1><img className="storybook-wordmark" src="/assets/storybook-wordmark.webp" alt="The Forge of Ideas" /></div>
+          <button className="landing-letter" aria-label={save ? 'Resume journey from the sealed letter' : 'Open the sealed letter'} title={save ? 'Resume your journey' : 'Open the sealed letter'} onClick={save ? () => go(save.screen) : begin} />
           <div className="landing-actions">
             <GoldButton onClick={save ? () => go(save.screen) : begin}>{save ? 'Continue your journey' : 'Begin the journey'} <ArrowRight /></GoldButton>
             {save ? <div className="resume-details"><span>Welcome back, {save.name}</span><button onClick={begin}>Begin anew <RotateCcw size={12} /></button></div> : <p className="landing-caption">Every great response begins with a spark.</p>}
@@ -359,7 +358,7 @@ export default function App() {
               <label className="sr-only" htmlFor="player-name">Your name</label>
               <div className={`name-field ${nameError ? 'invalid' : ''}`}><Feather aria-hidden="true" /><input ref={nameRef} id="player-name" name="name" placeholder="Your name" value={nameInput} onChange={(event) => { setNameInput(event.target.value); setNameError(''); }} maxLength={24} autoComplete="given-name" aria-describedby="name-helper" aria-invalid={Boolean(nameError)} /></div>
               <p id="name-helper" className={nameError ? 'field-help error' : 'field-help'} role={nameError ? 'alert' : undefined}>{nameError || 'A first name or nickname is all you need.'}</p>
-              <div className="form-actions"><GoldButton type="submit">Continue <ArrowRight /></GoldButton><button type="button" className="quiet-button" onClick={() => go('landing')}>Cancel</button></div>
+              <div className="form-actions"><GoldButton type="submit">Yes</GoldButton><button type="button" className="quiet-button" onClick={() => go('landing')}>Cancel</button></div>
             </form>
             <Ornament />
           </Frame>
@@ -371,10 +370,10 @@ export default function App() {
             <span className="scene-diamond"><Feather /></span><div><span className="eyebrow">THE FORGE OF IDEAS</span><p>{screen === 'ending' ? save?.ending.step === 'archive' ? 'The Archival Hall' : 'Journey complete' : screen === 'prologue' ? 'The Prologue' : screen === 'challenge' ? 'Stage 6 · Challenge' : screen === 'elaborate' ? 'Stage 5 · Elaborate' : screen === 'connect' ? 'Stage 4 · Connect' : screen === 'sort' ? 'Stage 3 · Sort' : screen === 'generate' ? 'Stage 2 · Generate' : screen === 'journey' && stage6Complete ? 'Stages 1–6 · Your journey' : screen === 'journey' && stage5Complete ? 'Stages 1–5 · Your journey' : screen === 'journey' && stage4Complete ? 'Stages 1–4 · Your journey' : screen === 'journey' && stage3Complete ? 'Stages 1–3 · Your journey' : screen === 'journey' && stage2Complete ? 'Stages 1–2 · Your journey' : 'Stage 1 · Prepare'}</p></div>
           </header>
           <nav className="side-tools" aria-label="Game tools">
-            <RoundButton label="Home" onClick={() => go('landing')}><Home /></RoundButton>
-            <RoundButton label="Ask the raven" onClick={() => { setOverlay('help'); playSound(); }}><Bird /></RoundButton>
-            <RoundButton label="Quest journal" onClick={() => { setOverlay('journal'); playSound(); }}><ScrollText /></RoundButton>
-            {(screen === 'journey' || screen === 'generate' || screen === 'sort' || screen === 'connect' || screen === 'elaborate' || screen === 'challenge' || screen === 'ending') && <RoundButton label="Journey overview" onClick={() => screen !== 'journey' ? go('journey') : setToast(stage6Complete ? 'Your journey is complete. Revisit a stage or enter the Archival Hall.' : 'Select an unlocked stage to review your work. Defeat the Beast to open the Archival Hall.')}><Compass /></RoundButton>}
+            <RoundButton label="Home" onClick={() => go('landing')}><StoryIcon name="home" /></RoundButton>
+            <RoundButton label="Ask the raven" onClick={() => { setOverlay('help'); playSound(); }}><StoryIcon name="raven" /></RoundButton>
+            <RoundButton label="Quest journal" onClick={() => { setOverlay('journal'); playSound(); }}><StoryIcon name="journal" /></RoundButton>
+            {(screen === 'journey' || screen === 'generate' || screen === 'sort' || screen === 'connect' || screen === 'elaborate' || screen === 'challenge' || screen === 'ending') && <RoundButton label="Journey overview" onClick={() => screen !== 'journey' ? go('journey') : setToast(stage6Complete ? 'Your journey is complete. Revisit a stage or enter the Archival Hall.' : 'Select an unlocked stage to review your work. Defeat the Beast to open the Archival Hall.')}><StoryIcon name="door" /></RoundButton>}
           </nav>
 
           {screen === 'prologue' && <section className="prologue-intro scene-enter" aria-label="Prologue">
@@ -386,31 +385,24 @@ export default function App() {
 
           {screen === 'prepare' && <Frame className="question-panel scene-enter">
             <div className="question-topline"><span className="eyebrow">YOUR QUESTION</span><span className="keyword-count" aria-label={`${explored.length} of 3 phrases explored`}>{explored.length} <span>/ 3</span><Sparkles size={13} /></span></div>
-            <h1 ref={heading} tabIndex={-1}><mark className={explored.includes('how') ? 'discovered' : ''}>How</mark> does Bradbury make <mark className={explored.includes('moment') ? 'discovered' : ''}>this moment</mark> <mark className={explored.includes('tense') ? 'discovered' : ''}>so tense</mark>?</h1>
+            <h1 ref={heading} tabIndex={-1}><mark role="button" tabIndex={0} aria-label="Inspect How in the question" aria-pressed={activeKeyword === 'how'} className={explored.includes('how') ? 'discovered' : ''} onClick={() => chooseKeyword('how')} onKeyDown={event => inspectKeywordWithKeyboard(event, 'how')}>How</mark> does Bradbury make <mark role="button" tabIndex={0} aria-label="Inspect this moment in the question" aria-pressed={activeKeyword === 'moment'} className={explored.includes('moment') ? 'discovered' : ''} onClick={() => chooseKeyword('moment')} onKeyDown={event => inspectKeywordWithKeyboard(event, 'moment')}>this moment</mark> <mark role="button" tabIndex={0} aria-label="Inspect so tense in the question" aria-pressed={activeKeyword === 'tense'} className={explored.includes('tense') ? 'discovered' : ''} onClick={() => chooseKeyword('tense')} onKeyDown={event => inspectKeywordWithKeyboard(event, 'tense')}>so tense</mark>?</h1>
             <Ornament />
             <p className="keyword-prompt">Explore the key phrases</p>
             <div className="keyword-buttons">{KEYWORDS.map((keyword) => <button key={keyword.id} className={`keyword-button ${activeKeyword === keyword.id ? 'selected' : ''} ${explored.includes(keyword.id) ? 'explored' : ''}`} aria-pressed={activeKeyword === keyword.id} onClick={() => chooseKeyword(keyword.id)}>{keyword.label}{explored.includes(keyword.id) && <Check size={13} aria-label="explored" />}</button>)}</div>
             <p className="question-source">“The Veldt” · Ray Bradbury</p>
           </Frame>}
 
-          {screen === 'journey' && <Frame className="journey-panel scene-enter">
-            <div className="journey-heading"><span className="eyebrow">FROM A SPARK TO A STORY</span><h1 ref={heading} tabIndex={-1}>Your journey</h1></div>
-            <div className="journey-map" aria-label="Seven stops on your journey">
-              <div className="map-row first-row"><button className="stage-tile current-stage" onClick={() => go('prepare')} title="Review Stage 1"><span className="stage-art"><img src="/assets/prepare.webp" alt="" /><span className="stage-check"><Check size={13} /></span></span><span className="stage-name">Prepare</span><span className="stage-caption">{save?.completed ? 'COMPLETED' : 'YOU ARE HERE'}</span></button></div>
-              <div className="map-branches" aria-hidden="true" />
-              <div className="map-row middle-row">{STAGES.slice(1, 5).map((stage) => {
-                const unlocked = stage.id === 'generate' ? save?.completed : stage.id === 'sort' ? stage2Complete : stage.id === 'connect' ? stage3Complete : stage4Complete;
-                const done = stage.id === 'generate' ? stage2Complete : stage.id === 'sort' ? stage3Complete : stage.id === 'connect' ? stage4Complete : stage5Complete;
-                return unlocked && (stage.id === 'generate' || stage.id === 'sort' || stage.id === 'connect' || stage.id === 'elaborate') ? <button key={stage.id} className="stage-tile current-stage" aria-label={`${done ? 'Review' : 'Open'} ${stage.name}`} title={stage.id === 'elaborate' ? elaborateLabel : stage.id === 'connect' ? connectLabel : stage.id === 'sort' ? sortLabel : generateLabel} onClick={() => go(stage.id as 'sort' | 'generate' | 'connect' | 'elaborate')}><span className="stage-art"><img src={`/assets/${stage.id}.webp`} alt="" /><span className="stage-check">{done ? <Check /> : <Sparkles />}</span></span><span className="stage-name">{stage.name}</span><span className="stage-caption">{done ? 'COMPLETED' : `OPEN · STAGE ${Number(stage.number)}`}</span></button> : <div className="stage-tile locked-stage" key={stage.id} title={`${stage.name}: ${stage.description} ${stage.id === 'generate' ? 'Complete Stage 1 to unlock.' : stage.id === 'sort' ? 'Complete Stage 2 to unlock.' : stage.id === 'connect' ? 'Complete Stage 3 to unlock.' : 'Complete Stage 4 to unlock.'}`} aria-label={`${stage.name}, locked`}><span className="stage-art"><img src={`/assets/${stage.id}.webp`} alt="" /><LockKeyhole className="stage-lock" size={12} /></span><span className="stage-name">{stage.name}</span><span className="stage-caption">STAGE {Number(stage.number)}</span></div>;
+          {screen === 'journey' && <>
+            {recapStage > 1 && <div className="recap-timer forge-timer"><StoryIcon name="hourglass" /><span role="timer" aria-label="Next stage time">{formatGenerateTime(recapStage <= 3 ? save?.sort.remainingMs ?? 2400000 : save?.elaborate.remainingMs ?? 2400000)}</span></div>}
+            <Frame className="journey-panel scene-enter"><h1 ref={heading} tabIndex={-1} className="sr-only">Your journey</h1>
+              <div className="journey-map" aria-label="Seven stops on your journey">{STAGES.map((stage,index) => {
+                const unlocked = index === 0 || (index === 1 ? save?.completed : index === 2 ? stage2Complete : index === 3 ? stage3Complete : index === 4 ? stage4Complete : index === 5 ? stage5Complete : stage6Complete);
+                const done = index === 0 ? save?.completed : index === 1 ? stage2Complete : index === 2 ? stage3Complete : index === 3 ? stage4Complete : index === 4 ? stage5Complete : index === 5 ? stage6Complete : save?.ending.completed;
+                const selected = index === recapStage - 1;
+                return <button key={stage.id} className={`stage-tile tile-${stage.id} ${unlocked ? 'unlocked-stage' : 'locked-stage'} ${done ? 'completed-stage' : ''} ${selected ? 'selected-stage' : ''}`} disabled={!unlocked} aria-label={`${unlocked ? done ? 'Review' : 'Open' : 'Locked'} ${stage.name}`} title={`${stage.name} — ${stage.short}`} onClick={() => go(stage.id === 'archive' ? 'ending' : stage.id)}><img src={`/assets/${stage.id}.webp`} alt="" /><span className="sr-only">{stage.name}</span>{selected && <Quill />}</button>;
               })}</div>
-              <div className="map-row last-row">{STAGES.slice(5).map(stage => {
-                const unlocked = stage.id === 'challenge' ? stage5Complete : stage6Complete;
-                const done = stage.id === 'challenge' ? stage6Complete : save?.ending.completed;
-                return unlocked ? <button key={stage.id} className="stage-tile current-stage" aria-label={`${done ? 'Review' : 'Open'} ${stage.name}`} title={stage.id === 'challenge' ? challengeLabel : 'Revisit the ending and your journey record'} onClick={() => go(stage.id === 'challenge' ? 'challenge' : 'ending')}><span className="stage-art"><img src={`/assets/${stage.id}.webp`} alt="" /><span className="stage-check">{done ? <Check /> : <Sparkles />}</span></span><span className="stage-name">{stage.name}</span><span className="stage-caption">{done ? 'COMPLETED' : stage.id === 'challenge' ? 'OPEN · STAGE 6' : 'OPEN · ENDING'}</span></button> : <div className="stage-tile locked-stage" key={stage.id} title={`${stage.name}: ${stage.description} ${stage.id === 'challenge' ? 'Complete Stage 5 to unlock.' : 'Complete Stage 6 to unlock.'}`} aria-label={`${stage.name}, locked`}><span className="stage-art"><img src={`/assets/${stage.id}.webp`} alt="" /><LockKeyhole className="stage-lock" size={12} /></span><span className="stage-name">{stage.name}</span></div>;
-              })}</div>
-            </div>
-            {save?.completed && <button className="stage1-achievement-link" onClick={() => setOverlay('complete')}>View achievement</button>}
-          </Frame>}
+            </Frame>
+          </>}
 
           {screen === 'generate' && save && <GenerateStage progress={save.generate} paused={overlay !== null} onChange={updateGenerate} onReturn={() => go('journey')} onComplete={completeGenerate} />}
           {screen === 'sort' && save && <SortStage progress={save.sort} ideas={save.generate.selected} paused={overlay !== null} reducedMotion={settings.reducedMotion} onChange={updateSort} onReturn={() => go('journey')} onComplete={completeSort} />}
@@ -419,15 +411,15 @@ export default function App() {
           {screen === 'challenge' && save && <ChallengeStage progress={save.challenge} elaborate={save.elaborate} connect={save.connect} ideas={save.generate.selected} assignments={save.sort.assignments} paused={overlay !== null} reducedMotion={settings.reducedMotion} onChange={updateChallenge} onReturn={() => go('journey')} onElaborate={() => go('elaborate')} onComplete={completeChallenge} />}
           {screen === 'ending' && save && <EndingStage save={save} paused={overlay !== null} saveFailed={saveFailed} onChange={updateEnding} onReturn={() => go('journey')} onDownload={downloadNotes} />}
 
-          {screen !== 'generate' && screen !== 'sort' && screen !== 'connect' && screen !== 'elaborate' && screen !== 'challenge' && screen !== 'ending' && <section className="dialogue-scroll" aria-label="Raven dialogue">
+          {screen !== 'generate' && screen !== 'sort' && screen !== 'connect' && screen !== 'elaborate' && screen !== 'challenge' && screen !== 'ending' && <section key={screen} className="dialogue-scroll" aria-label="Raven dialogue">
             <div className="scroll-paper" aria-hidden="true" /><div className="scroll-roll roll-left" aria-hidden="true" /><div className="scroll-roll roll-right" aria-hidden="true" />
             <div className="dialogue-content" aria-live="polite" aria-atomic="true">
               <div className="dialogue-topline"><span className="speaker-label"><Feather size={13} />{dialogueLabel}</span><span className="dialogue-pagination">{screen === 'prologue' ? `${String(dialogueIndex + 1).padStart(2, '0')} / 03` : screen === 'prepare' ? '01 · PREPARE' : 'THE PATH AHEAD'}</span></div>
               {dialogue}
             </div>
             <div className="dialogue-navigation">
-              <RoundButton label="Previous" onClick={() => screen === 'prologue' ? previousDialogue() : go(screen === 'prepare' ? 'prologue' : 'prepare')}><ChevronLeft /></RoundButton>
-              {screen !== 'journey' && <RoundButton label={screen === 'prepare' ? 'View your journey' : dialogueIndex === 2 ? 'Start Stage 1' : 'Next'} onClick={() => screen === 'prologue' ? nextDialogue() : go('journey')} disabled={screen === 'prepare' && !allExplored} className="next-button"><ChevronRight /></RoundButton>}
+              <RoundButton label="Previous" onClick={() => screen === 'prologue' ? previousDialogue() : go(screen === 'prepare' ? 'prologue' : recapPrevious)}><ChevronLeft /></RoundButton>
+              {screen !== 'journey' && <RoundButton label={screen === 'prepare' ? 'View your journey' : 'Start Stage 1'} onClick={() => screen === 'prologue' ? nextDialogue() : complete()} disabled={screen === 'prepare' && !allExplored} className="next-button"><ChevronRight /></RoundButton>}
             </div>
           </section>}
           {screen === 'prepare' && !allExplored && <p className="continue-hint">Explore all three phrases to continue <ArrowRight size={12} /></p>}
@@ -450,7 +442,7 @@ export default function App() {
         ['reducedMotion', 'Reduce motion', 'Still candlelight, no drifting particles or transitions.'],
         ['largeText', 'Larger dialogue', 'A little more room for every word.'],
       ] as const).map(([key, title, description]) => <label className="setting-row" key={key}><span><strong>{title}</strong><small>{description}</small></span><input type="checkbox" checked={settings[key]} onChange={(event) => setSettings({ ...settings, [key]: event.target.checked })} /><span className="switch-track" aria-hidden="true" /></label>)}</div>
-      <p className="settings-note">Settings and progress stay in this browser. Sound is optional.</p>
+      <p className="settings-note">Settings and progress stay in this browser. Sound is optional.</p><button className="quiet-button" onClick={() => void toggleFullscreen()}>{fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}</button>
       <GoldButton onClick={() => setOverlay(null)}>{screen === 'ending' ? 'Return to the ending' : screen === 'generate' || screen === 'sort' || screen === 'connect' || screen === 'elaborate' || screen === 'challenge' ? 'Return to the Forge' : 'Return to the study'}</GoldButton>
     </Modal>}
 
@@ -458,7 +450,7 @@ export default function App() {
       <div className="raven-advice"><Bird size={36} /><p>{screen === 'ending' ? 'Step through the glowing portal to reach the Archival Hall. Open the sealed scroll to review your writing and add an optional reflection. Download quest notes for a separate copy: progress stays in this browser, not on a server. Use the back arrow to revisit the valley, or Journey overview to revisit earlier stages. Earlier edits keep your writing and reflection but reopen completion checks.' : screen === 'challenge' ? 'Choose one of your ready Stage 5 infusions. Tap the Beast or use the horizontal aim slider, then launch. Hits depend only on aim, not on an automatic literary score. A miss raises Confusion; if you run out of usable infusions, retry the encounter. Your writing is never consumed. The flight and ambient motion pause in menus and hidden tabs, and reduced motion shortens effects.' : screen === 'elaborate' ? 'Choose or drag a completed connection crystal into the chamber. Select at least two of the six rune prompts, then write your own elaboration grounded in your classroom extract. Save each infusion to review it. At least one ready infusion is needed to complete Stage 5, and every saved infusion must be ready. Your writing is not automatically graded. If an earlier connection changes, your draft stays safe but needs an explicit refresh before it counts again. The 40-minute timer pauses in menus and hidden tabs; untimed play is available.' : screen === 'connect' ? 'Choose one central and one supporting ore, or drag each to its matching receptacle, then forge a connection. Write how the supporting idea develops the central point and helps answer the question. Each central idea can have up to two supporting ideas. Complete at least one crystal with a written statement; every saved crystal must be ready. Your writing is not automatically graded. Revisit Sort if you need different categories. Changing earlier ideas preserves your statements but may require review. The 60-minute timer pauses in menus and hidden tabs; untimed play is available.' : screen === 'sort' ? 'Select an ore to read its idea on the parchment, then select a category belt. You can also drag ores onto belts with a mouse or touch. Central ideas directly answer the question; supporting ideas develop a point; irrelevant ideas do not help this response. These are your decisions, not an automatic score. Sort every collected idea before completing Stage 3. Undo, return to tray, and revisiting belts let you change your mind. The 40-minute timer pauses in menus and hidden tabs, and untimed sorting is available.' : screen === 'generate' ? 'Select a glowing ore, read its idea, then choose Collect idea. Select it again to remove it. Gather any ideas you want to consider; there are no right-or-wrong scores at this stage. Review at least one idea in your pouch to complete Stage 2. The 60-minute exploration timer pauses in menus, away from this stage, or in a hidden tab. You may also pause it or explore untimed.' : screen === 'prepare' ? 'A question is a map in disguise. Explore “How”, “this moment” and “so tense”. Each phrase tells you something different about the response you need to write.' : screen === 'journey' ? 'Select Prepare to revisit the question. Completing Stage 1 unlocks Generate; Stage 2 unlocks Sort; Stage 3 unlocks Connect; Stage 4 unlocks Elaborate; Stage 5 unlocks Challenge. Earlier changes preserve your writing but may require review. Defeat the Beast in Stage 6 to unlock the ending and Archival Hall.' : 'Take your time, adventurer. Use the arrows on the parchment to follow my introduction. Your progress is saved as you go.'}</p></div>
       {screen === 'generate' && <p className="settings-note">“AI is becoming more lifelike” comes from the mockup. Other prompts are starter ideas for classroom review, not quotations from the text. Use your classroom extract to check their relevance.</p>}
       <div className="help-controls"><p><kbd>Tab</kbd> Move between controls</p><p><kbd>Enter</kbd> / <kbd>Space</kbd> Select a focused button</p><p><kbd>Esc</kbd> Close this window</p></div>
-      <GoldButton onClick={() => setOverlay(null)}>I’m ready <Feather /></GoldButton>
+      <div className="modal-actions"><GoldButton onClick={() => setOverlay(null)}>I’m ready <Feather /></GoldButton><button className="quiet-button" onClick={() => setOverlay('settings')}>Settings</button>{save?.completed && <button className="quiet-button" onClick={() => { setOverlay(null); go('journey'); }}>Journey overview</button>}</div>
     </Modal>}
 
     {overlay === 'journal' && <Modal title="Your quest journal" onClose={() => setOverlay(null)} className="journal-modal">

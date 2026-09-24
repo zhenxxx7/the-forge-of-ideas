@@ -1,3 +1,4 @@
+import { openSettings } from './helpers';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -7,12 +8,10 @@ async function enter(page: Page, name = 'Sean') {
   if (await skip.isVisible()) await skip.click();
   await page.getByRole('button', { name: 'Begin the journey', exact: true }).click();
   await page.getByLabel('Your name', { exact: true }).fill(name);
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
 }
 
 async function prepare(page: Page) {
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
   await page.getByRole('button', { name: 'Start Stage 1', exact: true }).click();
 }
 
@@ -20,21 +19,20 @@ test('complete onboarding and Stage 1; save, notes and future-stage boundary', a
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
-  await page.getByRole('button', { name: 'Skip intro' }).click();
   await expect(page.getByRole('heading', { name: 'Forge of Ideas' })).toBeVisible();
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-landing.png`, animations: 'disabled' });
   await page.getByRole('button', { name: 'Begin the journey', exact: true }).click();
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
   await expect(page.getByRole('alert')).toHaveText('Please enter at least 2 characters.');
   await page.getByLabel('Your name', { exact: true }).fill('  Sean  ');
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-name.png`, animations: 'disabled' });
-  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Welcome, Sean.' })).toBeVisible();
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-prologue.png`, animations: 'disabled' });
   await prepare(page);
   await expect(page.getByRole('button', { name: 'View your journey' })).toBeDisabled();
   await page.getByRole('button', { name: 'How', exact: true }).click();
-  await expect(page.getByText('LOOK AT THE WRITER’S CRAFT', { exact: true })).toBeVisible();
+  await expect(page.locator('.dialogue-copy')).toContainText('choices Bradbury makes');
   await expect(page.getByRole('button', { name: 'View your journey' })).toBeDisabled();
   await page.getByRole('button', { name: 'this moment', exact: true }).click();
   await page.getByRole('button', { name: 'so tense', exact: true }).click();
@@ -50,29 +48,24 @@ test('complete onboarding and Stage 1; save, notes and future-stage boundary', a
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: 'View your journey' }).click();
   await expect(page.getByRole('heading', { name: 'Your journey' })).toBeVisible();
-  await expect(page.getByLabel('Generate, locked', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open Generate', exact: true })).toBeVisible();
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-map.png`, animations: 'disabled' });
-  await page.getByRole('button', { name: 'Complete Stage 1' }).click();
-  await expect(page.getByRole('dialog')).toContainText('STAGE 1 · COMPLETE');
-  await page.screenshot({ path: `artifacts/${testInfo.project.name}-complete.png`, animations: 'disabled' });
-  await page.getByRole('button', { name: 'Return to the journey' }).click();
   await page.reload();
-  await page.getByRole('button', { name: 'Skip intro' }).click();
   await page.getByRole('button', { name: 'Continue your journey' }).click();
-  await expect(page.getByRole('button', { name: 'View achievement' })).toBeVisible();
-  await expect(page.getByText('COMPLETED', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Continue to Generate', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('forge-of-ideas:progress:v1')!).completed)).toBe(true);
   expect(errors).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
 });
 
 test('settings, focus, home and cancellation preserve progress', async ({ page }) => {
   await enter(page, 'Maya');
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openSettings(page);
   await page.getByLabel('Reduce motion', { exact: false }).check();
   await page.getByLabel('Larger dialogue', { exact: false }).check();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
-  await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Ask the raven', exact: true })).toBeFocused();
   await expect(page.locator('.atmosphere canvas')).toHaveCount(0);
   await page.getByRole('button', { name: 'Home', exact: true }).click();
   await page.getByRole('button', { name: 'Begin anew', exact: true }).click();
@@ -98,14 +91,11 @@ test('all six stages and the ending remain playable when browser storage is bloc
   await expect(page.getByText('Progress could not be saved')).toBeVisible();
   await prepare(page);
   await page.getByRole('button', { name: 'How', exact: true }).click();
-  await expect(page.getByLabel('1 of 3 phrases explored')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'How', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: 'this moment', exact: true }).click();
   await page.getByRole('button', { name: 'so tense', exact: true }).click();
   await page.getByRole('button', { name: 'View your journey' }).click();
-  await page.getByRole('button', { name: 'Complete Stage 1' }).click();
-  const completionDialog = page.getByRole('dialog');
-  await expect(completionDialog).toContainText('STAGE 1 · COMPLETE');
-  await completionDialog.getByRole('button', { name: 'Start Stage 2', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue to Generate', exact: true }).click();
   await page.getByRole('button', { name: 'Enter the Forge', exact: true }).click();
   await page.getByRole('button', { name: 'Start gathering', exact: true }).click();
   await page.getByRole('button', { name: 'Collect idea', exact: true }).click();
@@ -114,34 +104,35 @@ test('all six stages and the ending remain playable when browser storage is bloc
   await page.getByRole('button', { name: 'Review my pouch', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Stage 2', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Generate', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Start Stage 3', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue to Sort', exact: true }).click();
   await page.getByRole('button', { name: 'Start sorting', exact: true }).click();
   await page.getByRole('button', { name: 'Select Lifelike AI', exact: true }).click();
   await page.getByRole('button', { name: 'Move selected idea to Central', exact: true }).click();
   await page.getByRole('button', { name: 'Select Sensory detail', exact: true }).click();
   await page.getByRole('button', { name: 'Move selected idea to Supporting', exact: true }).click();
-  await page.getByRole('button', { name: 'Review sorting', exact: true }).click();
-  await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
+    await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Sort', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Start Stage 4', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue to Connect', exact: true }).click();
   await page.getByRole('button', { name: 'Enter the chamber', exact: true }).click();
   await page.getByRole('button', { name: 'Select central idea: Lifelike AI', exact: true }).click();
   await page.getByRole('button', { name: 'Select supporting idea: Sensory detail', exact: true }).click();
   await page.getByRole('button', { name: 'Forge connection', exact: true }).click();
+  await page.getByRole('button', { name: 'Write connecting statement', exact: true }).click();
   await page.getByRole('textbox', { name: /How does the supporting idea/ }).fill('Lifelike details make an artificial experience feel threatening.');
-  await page.getByRole('button', { name: 'Review connections', exact: true }).click();
+  await page.getByRole('button', { name: 'Save statement', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Stage 4', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Connect', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Start Stage 5', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue to Elaborate', exact: true }).click();
   await page.getByRole('button', { name: 'Enter the chamber', exact: true }).click();
   await page.getByRole('button', { name: 'Select crystal: Lifelike AI', exact: true }).click();
   await page.getByRole('button', { name: 'Add Evidence rune', exact: true }).click();
   await page.getByRole('button', { name: 'Add Effect rune', exact: true }).click();
+  await page.getByRole('button', { name: 'Write elaborated response', exact: true }).click();
   await page.getByRole('textbox', { name: /Write how your evidence/ }).fill('The sensory detail develops my idea about a lifelike artificial experience. I would check this interpretation against the classroom extract.');
-  await page.getByRole('button', { name: 'Review infusions', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Review infusions', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Stage 5', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Elaborate', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Start Stage 6', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue to Challenge', exact: true }).click();
   await page.getByRole('button', { name: 'Face the Beast', exact: true }).click();
   await page.getByRole('button', { name: 'Take aim', exact: true }).click();
   await page.getByRole('button', { name: 'Select infusion: Lifelike AI', exact: true }).click();
@@ -150,7 +141,7 @@ test('all six stages and the ending remain playable when browser storage is bloc
   await expect(page.getByRole('heading', { name: 'The Beast retreats.', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Complete Stage 6', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'A journey well forged.', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Enter the Archival Hall', exact: true }).click();
+  await page.getByRole('button', { name: 'Enter the Archival Hall through the portal', exact: true }).click();
   await page.getByRole('button', { name: 'Open your journey record', exact: true }).click();
   await page.getByRole('textbox', { name: /One thought to carry forward/ }).fill('I can explain my ideas more clearly.');
   await expect(page.getByRole('dialog')).toContainText('Could not save in this browser.');

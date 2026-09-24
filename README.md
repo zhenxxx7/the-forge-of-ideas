@@ -25,11 +25,11 @@ npm run test:e2e
 
 ## Implemented flow
 
-1. CPDD opening card and illustrated landing screen.
-2. Name entry with validation and nickname support.
-3. Three-part raven prologue with previous/next controls.
+1. Illustrated landing screen, following the latest screenshot set (no opening splash).
+2. Name entry with Yes/Cancel, validation, and nickname support.
+3. One raven introduction with previous/next controls.
 4. Stage 1: explore **How**, **this moment**, and **so tense** in the supplied Bradbury question.
-5. Journey overview, Stage 1 completion, and downloadable quest notes.
+5. Stage 1 recap in the seven-icon journey map; quest notes remain available from the scroll icon.
 6. Stage 2's forest gateway, introduction, eight explorable idea ores, collection pouch, and completion review.
 7. Return to the journey map, revisit Generate, and resume saved idea gathering.
 8. Stage 3: sorting-room introduction, three category conveyor belts, editable sorting decisions, and completion review.
@@ -44,6 +44,30 @@ npm run test:e2e
 17. Open the sealed scroll to review the journey record, add an optional reflection, and download all quest notes.
 
 The complete mockup sequence is playable. No full literary extract or automated literary grading is included. The question and learning sequence come from the mockup; expanded keyword, rune and reflection guidance is authored for this interactive build.
+
+## Latest storyboard redesign
+
+The supplied 15 screenshots define 28 frames, from landing to Archival Hall. `src/storyboard.ts` holds the exact scene and recap wording; `src/storyboard.css` applies the shared composition. Existing stage models and learner-authored writing remain intact.
+
+- Illustrated circular controls, the seven-icon map, current-stage quill, hourglass, textured parchment, distressed title, ore sprites, potion sprites, and six red rune glyphs follow the new reference.
+- Stage 3 completes directly from the belts. Stage 4 writing opens by selecting the forged crystal. Stage 5 writing opens by selecting the chamber crystal; its six-rune scene has no parchment, as in the mockup. Victory likewise removes the parchment before the ending.
+- Raven help provides Settings and Journey overview without adding toolbar clutter. Journal exports, save/resume, paused/untimed play, validation, repair of earlier work, keyboard navigation and touch dragging remain available.
+- World actions now complement the parchment arrows: open the sealed letter and gateway, inspect question phrases, hold ores to collect, activate and release conveyors, touch the crystal chambers, drag a flask into the battlefield, and enter the portal. Visible cues and keyboard alternatives remain available.
+- Timers display real saved countdowns, not the screenshot's illustrative values. Starter prompts are not graded answers. Eight actual ideas occupy a nine-slot tray; no extra literary answer is invented to fill the reference's sample grid.
+- Desktop retains the 16:9 staging. Portrait reflows controls above readable parchment instead of shrinking text. The sealed scroll and victory effect are vector approximations, not pixel-identical raster cutouts.
+- Artwork provenance, saved paths and generation prompt notes: [mockup redesign artwork](docs/mockup-redesign-artwork.md).
+
+For visual QA, start the dev server and run:
+
+```sh
+node scripts/capture-storyboard.mjs 1440
+node scripts/capture-storyboard.mjs 412
+node scripts/capture-storyboard.mjs 320
+node scripts/capture-storyboard.mjs 320 all large
+node scripts/capture-storyboard.mjs 844
+```
+
+Each run checks all 28 frames for page overflow, out-of-frame controls, missing images and parchment text overflow, and saves PNGs/contact sheets under ignored `artifacts/storyboard/`. Use `npm run test:e2e` for interaction coverage, including the full mockup sequence and blocked-storage playthrough. Actual Safari and physical-device checks remain release work.
 
 ## Stage 2 behavior and content
 
@@ -75,7 +99,7 @@ The complete mockup sequence is playable. No full literary extract or automated 
 - Changing an earlier pouch or category invalidates completion but preserves all authored connections and writing. Stale crystals are flagged for review, including ores no longer in the pouch. Disconnect an ineligible support, reconsider Sort, or explicitly confirm removal of a crystal. Only that confirmed removal discards its statement; original ores remain.
 - A separate **60:00 (60-minute)** timer runs only during combining/explaining. Menus, crystal collection, hidden tabs, review and manual pause stop it. Expiry preserves writing and opens review. Continue untimed or explicitly restart a timed period.
 - Statements autosave with the existing version-1 progress record and appear in the quest journal and notes download. Older saves acquire Stage 4 defaults without losing prior progress. Blocked browser storage still allows in-memory play, with a visible saving warning.
-- The native SVG crystal uses transform/opacity animation and requestAnimationFrame pointer dragging. Slow energy highlights and crystal motion pause with dialogs, hidden tabs and manual pause; reduced motion disables them. No new dependency or backend is used.
+- The illustrated crystal uses transform/opacity animation and requestAnimationFrame pointer dragging. Slow energy highlights and crystal motion pause with dialogs, hidden tabs and manual pause; reduced motion disables them. No new dependency or backend is used.
 
 ### Stage 5: Elaborate
 
@@ -88,14 +112,14 @@ The complete mockup sequence is playable. No full literary extract or automated 
 
 ### Stage 6: Challenge
 
-- Completing Stage 5 unlocks the Beast encounter. Only currently ready infusions enter its stock. Learners select a vial, tap the battlefield or use a keyboard-operable range control to aim, then launch.
+- Completing Stage 5 unlocks the Beast encounter. Only currently ready infusions enter its stock. Learners can drag a vial into the battlefield, double-tap the same aim point to throw a selected vial, or use the keyboard-operable range and launch controls.
 - A hit is determined only by the visible aiming mechanic, never by hidden literary grading. One ready infusion requires one hit; two or more require two hits. Misses raise Confusion. If too few vials remain for success, the encounter ends with a retry option that restores stock without touching Stage 5 writing.
 - The Beast/Confusion bars, dotted arc, projectile flight, impact and victory/failed states are live HTML/SVG/CSS over local WebP art. Flight and ambient motion pause in menus and hidden tabs; reduced motion shortens effects. Stage 6 adds no backend or runtime package.
 - Encounter progress autosaves in the existing version-1 record. Older saves acquire safe Stage 6 defaults. Changing upstream ideas or writing invalidates the victory and restarts the encounter, while preserving authored responses. The journal and notes download report the game outcome separately from the literary work.
 
 ### Ending and Archival Hall
 
-- Stage 6 victory unlocks the ending. **Complete Stage 6** leads directly to the restored valley from PDF page 31. Enter through the clickable portal or its equivalent dialogue button; both work with mouse, touch and keyboard.
+- Stage 6 victory unlocks the ending. **Complete Stage 6** leads directly to the restored valley from PDF page 31. Enter through the clickable portal, using mouse, touch or keyboard.
 - The Hall follows PDF page 32, with the raven above a sealed record scroll. Entering marks the journey complete. Open the scroll to view the learner's name, six completed stages, idea/connection/response counts, and expandable original writing.
 - An optional reflection (maximum 1,200 characters) autosaves and appears in the journal and downloaded notes. These are local browser records, not server archives, official certificates, or literary grades. Download a copy before clearing browser data.
 - The journey map unlocks the Hall after a validated Stage 6 victory. Returning Home, replaying the valley, revisiting earlier stages and reloading preserve writing. Earlier content changes reset ending completion and relock the Hall, but preserve the reflection for the next visit.
@@ -110,17 +134,17 @@ The complete mockup sequence is playable. No full literary extract or automated 
 - Audio is optional and off by default. Interaction sounds are synthesized locally after user interaction; no downloaded music or narration is implied.
 - Desktop uses the reference's 16:9 composition. Portrait screens use larger, reflowed controls. Actual phone hardware and Safari still require device QA before release.
 - Phaser is lazy-loaded for bounded ambient particles and candle glow; readable UI and background render independently of it. Effects are removed in reduced-motion mode.
-- The raven is a single SVG rig derived from the closed-beak original. Its body and feet stay fixed while its jaw pivots and head gently nods. Time-based interpolation supplies continuous intermediate poses, including when dialogue changes rapidly. Animation pauses in hidden tabs and respects both the game's and the system's reduced-motion setting.
+- The raven is a single SVG rig derived from the closed-beak original. Extra SVG clearance keeps the tail inside the frame. Its jaw and head interpolate while perched; when the scene moves its perch, it takes off, flaps along a raised path, turns, and lands. Same-perch scene changes get a short hop. Flight pauses in hidden tabs and respects both the game's and the system's reduced-motion setting.
 
 ## Artwork
 
 - `public/assets/study.webp`: optimized copy of the supplied `landing-screen__bg.png`, keeping its composition.
-- `public/assets/raven.svg` and `raven-beak-open.svg`: the supplied original SVGs, copied unchanged. Only `raven.svg` is used in the animated rig; the second drawing remains as a reference, not a swapped frame.
-- Stage icons, MOE crest, and paper texture: extracted from the supplied PDF.
-- CPDD opening logo: extracted from the supplied storyboard. This is a small reference image; a vector original would improve the opening card.
+- `public/assets/raven.svg`: the supplied raven drawing with a wider viewBox so its tail is fully visible. `raven-beak-open.svg` remains an unchanged reference; it uses different coordinates and is not swapped into the animated rig.
+- Stage icons and MOE crest: extracted from the supplied PDF. The latest dialogue parchment and illustrated items are listed in `docs/mockup-redesign-artwork.md`.
+- The legacy CPDD logo remains available as a source asset, but is not shown in the latest onboarding sequence.
 - Gold framing and controls: SVG/CSS; lesson text is selectable HTML.
 - Stage 2 portal backgrounds and transparent ruby pouch: built-in imagegen edits based on the supplied PDF scenes, optimized as local WebP assets. Exact prompts and paths are recorded in `docs/stage2-artwork.md`.
-- Stage 3 sorting room: built-in imagegen edit of the supplied PDF page 16, with UI removed. Code-native gems, controls, and moving belt highlights remain interactive. See `docs/stage3-artwork.md` for the exact prompt and file paths.
+- Stage 3 sorting room: built-in imagegen edit of the supplied PDF page 16, with UI removed. Illustrated ore sprites, HTML controls, and moving belt highlights remain interactive. See `docs/stage3-artwork.md` for the exact prompt and file paths.
 - Stage 4 connecting chamber: built-in imagegen edit of PDF page 19, with baked-in UI, ores and raven removed. See `docs/stage4-artwork.md` for the exact prompt, provenance, runtime asset and native-animation details.
 - Stage 5 elaboration room: built-in imagegen edit of PDF page 24, with baked-in UI, crystal, rune graphics and raven removed. See `docs/stage5-artwork.md` for its exact prompt, provenance and runtime asset.
 - Stage 6 battlefield and transparent Beast: two built-in imagegen edits of PDF page 27, allowing the encounter to animate over a clean scene. See `docs/stage6-artwork.md` for both exact prompts, provenance and runtime assets.

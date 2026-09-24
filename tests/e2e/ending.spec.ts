@@ -1,3 +1,4 @@
+import { openSettings, openJourney } from './helpers';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -44,7 +45,7 @@ test('Stage 6 leads through the portal to a saved, downloadable journey record',
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-ending-record.png`, fullPage: true, animations: 'disabled' });
   await page.keyboard.press('Escape');
   await expect(scroll).toBeFocused();
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
+  await openJourney(page);
   await page.getByRole('button', { name: 'Review Archival Hall', exact: true }).click();
   await expect(scroll).toBeVisible();
   await resume(page);
@@ -56,13 +57,13 @@ test('Stage 6 leads through the portal to a saved, downloadable journey record',
 
 test('earlier writing changes relock the ending but preserve the reflection', async ({ page }) => {
   await enter(page, true);
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
+  await openJourney(page);
   await page.getByRole('button', { name: 'Review Elaborate', exact: true }).click();
   await page.getByRole('button', { name: 'Inspect infusion: The setting', exact: true }).click();
   await page.getByRole('button', { name: 'Edit infusion', exact: true }).click();
   await page.getByRole('textbox', { name: /Write how your evidence/ }).fill(writing + ' A new thought.');
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
-  await expect(page.getByLabel('Archival Hall, locked', { exact: true })).toBeVisible();
+  await openJourney(page);
+  await expect(page.getByLabel('Locked Archival Hall', { exact: true })).toBeVisible();
   const ending = await page.evaluate(() => JSON.parse(localStorage.getItem('forge-of-ideas:progress:v1')!).ending);
   expect(ending).toEqual({ step: 'portal', completed: false, reflection });
   await page.getByRole('button', { name: 'Quest journal', exact: true }).click();
@@ -74,16 +75,16 @@ test('ending motion pauses in menus and supports larger text and reduced motion'
   await enter(page);
   await page.getByRole('button', { name: 'Complete Stage 6', exact: true }).click();
   await expect(page.locator('.portal-shimmer')).toHaveCSS('animation-play-state', 'running');
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openSettings(page);
   await expect(page.locator('.portal-shimmer')).toHaveCSS('animation-play-state', 'paused');
   await page.getByLabel('Reduce motion', { exact: false }).check();
   await page.getByLabel('Larger dialogue', { exact: false }).check();
   await page.keyboard.press('Escape');
   await expect(page.locator('.portal-shimmer')).toHaveCSS('animation-name', 'none');
-  await page.getByRole('button', { name: 'Enter the Archival Hall', exact: true }).click();
+  await page.getByRole('button', { name: 'Enter the Archival Hall through the portal', exact: true }).click();
   await page.getByRole('button', { name: 'Return to the restored valley', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'A journey well forged.', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Enter the Archival Hall', exact: true }).click();
+  await page.getByRole('button', { name: 'Enter the Archival Hall through the portal', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'The Archival Hall', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

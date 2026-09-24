@@ -1,3 +1,4 @@
+import { openSettings, openJourney } from './helpers';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
@@ -14,7 +15,7 @@ async function enter(page: Page, connect?: Partial<ConnectProgress>, categories 
     localStorage.setItem('forge-of-ideas:progress:v1', JSON.stringify({ version: 1, name: 'Sean', screen: connect ? 'connect' : 'journey', prologueIndex: 2, explored: ['how', 'moment', 'tense'], completed: true, generate: { step: 'collected', selected: ideas, completed: true }, sort: { step: 'review', assignments: categories, completed: true }, ...(connect ? { connect } : {}) }));
   }, { ideas, connect, categories });
   await page.goto('/'); await resume(page);
-  if (!connect) await page.getByRole('button', { name: 'Start Stage 4', exact: true }).click();
+  if (!connect) await page.getByRole('button', { name: 'Continue to Connect', exact: true }).click();
 }
 async function resume(page: Page) {
   const skip = page.getByRole('button', { name: 'Skip intro' });
@@ -41,7 +42,7 @@ test('complete Stage 4 with two supporting ideas, notes, reload and revision', a
   await choose(page, 'central', 'The setting'); await choose(page, 'supporting', 'Sensory detail');
   await page.getByRole('button', { name: 'Forge connection', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Explain your connection', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Review connections', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Write connecting statement', exact: true }).click();
   const editor = page.getByRole('textbox', { name: /How does the supporting idea/ });
   await editor.fill(statement);
   await page.getByRole('button', { name: 'Add supporting idea', exact: true }).click();
@@ -49,11 +50,12 @@ test('complete Stage 4 with two supporting ideas, notes, reload and revision', a
   await expect(page.getByRole('button', { name: 'Strengthen crystal', exact: true })).toBeDisabled();
   await choose(page, 'supporting', 'Reactions');
   await page.getByRole('button', { name: 'Strengthen crystal', exact: true }).click();
+  await page.getByRole('button', { name: 'Write connecting statement', exact: true }).click();
   await expect(editor).toHaveValue(statement);
   await expect(page.getByRole('button', { name: 'Add supporting idea', exact: true })).toBeDisabled();
   expect((await saved(page)).connections).toEqual([{ main: 'setting', supporting: ['senses', 'reactions'], explanation: statement }]);
   await page.screenshot({ path: `artifacts/${testInfo.project.name}-stage4-explain.png`, fullPage: true, animations: 'disabled' });
-  await page.getByRole('button', { name: 'Review connections', exact: true }).click();
+  await page.getByRole('button', { name: 'Save statement', exact: true }).click();
   await page.getByRole('button', { name: 'Complete Stage 4', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Review Connect', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open Elaborate', exact: true })).toBeVisible();
@@ -66,12 +68,13 @@ test('complete Stage 4 with two supporting ideas, notes, reload and revision', a
   await page.keyboard.press('Escape');
   await page.reload(); await resume(page);
   await page.getByRole('button', { name: 'Review Connect', exact: true }).click();
-  await page.getByRole('button', { name: 'Edit The setting', exact: true }).click();
+  await page.getByRole('button', { name: 'Write connecting statement', exact: true }).click();
   await editor.fill('   ');
-  await expect(page.getByRole('button', { name: 'Review connections', exact: true })).toBeDisabled();
+  await expect(page.getByRole('dialog')).toContainText('Add a connecting statement.');
   expect((await saved(page)).completed).toBe(false);
   await editor.fill(statement);
   await page.reload(); await resume(page);
+  await page.getByRole('button', { name: 'Write connecting statement', exact: true }).click();
   await expect(editor).toHaveValue(statement);
   expect(errors).toEqual([]);
 });
@@ -95,11 +98,12 @@ test('matching receptacle drag, wrong drop, Escape and keyboard selection', asyn
   await expect(page.locator('.connect-drag-ghost')).toHaveCount(0);
   await page.getByRole('button', { name: 'Select supporting idea: Sensory detail', exact: true }).focus(); await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Forge connection', exact: true }).focus(); await page.keyboard.press('Space');
-  await expect(page.getByRole('textbox', { name: /How does the supporting idea/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Write connecting statement', exact: true })).toBeVisible();
   await expect.poll(() => page.locator('.crystal-materialize').evaluate(element => Number(getComputedStyle(element).opacity))).toBe(1);
-  expect(await page.locator('.crystal-materialize > svg').evaluate(element => getComputedStyle(element).animationPlayState)).toBe('paused');
+  expect(await page.locator('.crystal-materialize .connection-crystal').evaluate(element => getComputedStyle(element).animationPlayState)).toBe('paused');
+  await page.locator('.forge-timer').hover();
   await page.getByRole('button', { name: 'Resume timer', exact: true }).click();
-  expect(await page.locator('.crystal-materialize > svg').evaluate(element => getComputedStyle(element).animationPlayState)).toBe('running');
+  expect(await page.locator('.crystal-materialize .connection-crystal').evaluate(element => getComputedStyle(element).animationPlayState)).toBe('running');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   expect(await page.locator('.crystal-materialize').evaluate(element => getComputedStyle(element).animationName)).toBe('none');
 });
@@ -112,8 +116,7 @@ test('empty categories require learner-led sorting, never an invented pair', asy
   expect((await saved(page)).connections).toEqual([]);
   await page.getByRole('button', { name: 'Revisit sorting', exact: true }).click();
   await sortIdea(page, 'The setting', 'Central'); await sortIdea(page, 'Sensory detail', 'Supporting');
-  await page.getByRole('button', { name: 'Review sorting', exact: true }).click();
-  await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
+    await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
   await page.getByRole('button', { name: 'Open Connect', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'A connection needs two kinds of idea.' })).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Central idea collection', exact: true }).getByRole('button')).toHaveCount(1);
@@ -126,9 +129,11 @@ test('menus, manual pause and hidden tabs stop the timer; expiry keeps writing',
   await page.clock.pauseAt(new Date(Date.now() + 100));
   await page.clock.runFor(1500);
   const initial = (await saved(page)).remainingMs;
+  await page.locator('.forge-timer').hover();
   await page.getByRole('button', { name: 'Pause timer', exact: true }).click();
   const manual = (await saved(page)).remainingMs;
   await page.clock.fastForward(5000); expect((await saved(page)).remainingMs).toBe(manual);
+  await page.locator('.forge-timer').hover();
   await page.getByRole('button', { name: 'Resume timer', exact: true }).click();
   await page.clock.runFor(1500); expect((await saved(page)).remainingMs).toBeLessThan(initial);
   await page.getByRole('button', { name: 'Open crystal collection, 1 crystals', exact: true }).click();
@@ -139,15 +144,17 @@ test('menus, manual pause and hidden tabs stop the timer; expiry keeps writing',
   const hidden = (await saved(page)).remainingMs;
   await page.clock.fastForward(10_000); expect((await saved(page)).remainingMs).toBe(hidden);
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { value: false, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await openSettings(page);
   const settings = (await saved(page)).remainingMs;
   await page.clock.fastForward(10_000); expect((await saved(page)).remainingMs).toBe(settings);
   await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Write connecting statement', exact: true }).click();
   await page.getByRole('textbox', { name: /How does the supporting idea/ }).fill(statement + ' Still thinking.');
+  await page.getByRole('button', { name: 'Save statement', exact: true }).click();
   await page.clock.fastForward(30_000);
   await expect(page.getByRole('heading', { name: 'Ideas, stronger together.' })).toBeVisible();
   expect((await saved(page)).connections[0].explanation).toBe(statement + ' Still thinking.');
-  await page.getByRole('button', { name: 'Continue untimed', exact: true }).click();
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
   await expect(page.getByRole('timer')).toHaveText('Untimed');
   await page.clock.fastForward(120_000); await expect(page.getByRole('timer')).toHaveText('Untimed');
   await page.getByRole('button', { name: 'Use timer', exact: true }).click();
@@ -156,28 +163,28 @@ test('menus, manual pause and hidden tabs stop the timer; expiry keeps writing',
 
 test('upstream sorting changes flag saved writing for repair; deletion is explicit', async ({ page }) => {
   await enter(page, { ...explained, completed: true });
-  await page.getByRole('button', { name: 'Revisit Sort', exact: true }).click();
+  await openJourney(page);
+  await page.getByRole('button', { name: 'Review Sort', exact: true }).click();
   await sortIdea(page, 'Sensory detail', 'Irrelevant');
   expect((await saved(page)).completed).toBe(false);
   expect((await saved(page)).connections[0].explanation).toBe(statement);
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
-  await expect(page.getByLabel('Connect, locked', { exact: true })).toBeVisible();
+  await openJourney(page);
+  await expect(page.getByLabel('Locked Connect', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Open Sort', exact: true }).click();
-  await page.getByRole('button', { name: 'Review sorting', exact: true }).click();
-  await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
+    await page.getByRole('button', { name: 'Complete Stage 3', exact: true }).click();
   await page.getByRole('button', { name: 'Open Connect', exact: true }).click();
-  await expect(page.getByText('Sorting changed. Revisit Sort or revise this crystal.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Complete Stage 4', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Edit The setting', exact: true }).click();
+  await page.getByRole('button', { name: 'Write connecting statement', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Sorting changed. Revisit Sort or revise this crystal.');
   await page.getByRole('button', { name: 'Disconnect Sensory detail', exact: true }).click();
   await expect(page.getByRole('textbox', { name: /How does the supporting idea/ })).toHaveValue(statement);
   await page.getByRole('button', { name: 'Add supporting idea', exact: true }).click();
   await choose(page, 'supporting', 'Reactions');
   await page.getByRole('button', { name: 'Forge connection', exact: true }).click();
-  await page.getByRole('button', { name: 'Review connections', exact: true }).click();
+  await page.getByRole('button', { name: 'Open crystal collection, 1 crystals', exact: true }).click();
   await page.getByRole('button', { name: 'Remove crystal: The setting', exact: true }).click();
   await page.getByRole('button', { name: 'Keep crystal', exact: true }).click();
   expect((await saved(page)).connections[0].explanation).toBe(statement);
+  await page.getByRole('button', { name: 'Open crystal collection, 1 crystals', exact: true }).click();
   await page.getByRole('button', { name: 'Remove crystal: The setting', exact: true }).click();
   await page.getByRole('button', { name: 'Remove crystal', exact: true }).click();
   expect((await saved(page)).connections).toEqual([]);
@@ -186,9 +193,9 @@ test('upstream sorting changes flag saved writing for repair; deletion is explic
 
 test('discarding a collected ore retains the authored connection across reload', async ({ page }) => {
   await enter(page, { ...explained, completed: true });
-  await page.getByRole('button', { name: 'Journey overview', exact: true }).click();
+  await openJourney(page);
   await page.getByRole('button', { name: 'Review Generate', exact: true }).click();
-  await page.getByRole('button', { name: 'Gather more ideas', exact: true }).click();
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
   await page.getByRole('button', { name: 'Explore Sensory detail', exact: true }).click();
   await page.getByRole('button', { name: 'In your pouch', exact: true }).click();
   expect((await saved(page)).connections[0].explanation).toBe(statement);

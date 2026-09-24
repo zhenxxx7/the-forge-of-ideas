@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowRight, Check, ChevronLeft, Feather, Hourglass, Layers3, Pause, Play, RotateCcw, Undo2 } from 'lucide-react';
+import { ArrowRight, Check, ChevronLeft, Feather, Layers3, Pause, Play, RotateCcw, Undo2 } from 'lucide-react';
 import { formatGenerateTime, IDEA_PROMPTS } from '../stage2';
 import type { IdeaId } from '../stage2';
 import { advanceSortTimer, allIdeasSorted, assignIdea, isSortCategory, SORT_CATEGORIES, SORT_DURATION_MS } from '../stage3';
@@ -10,6 +10,8 @@ import { Frame, GoldButton, RoundButton } from './GameUI';
 import { Modal } from './Modal';
 import { Ornament } from './Ornament';
 import { SortGem } from './SortGem';
+import { SCRIPT } from '../storyboard';
+import { StoryIcon } from './StoryIcon';
 
 type Props = {
   progress: SortProgress;
@@ -37,8 +39,8 @@ export function SortStage({ progress, ideas, paused, reducedMotion, onChange, on
   const flightElement = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
   const suppressClick = useRef(false);
-  const sorting = progress.step === 'sorting';
-  const activeId = progress.activeIdea ?? ideas[0];
+  const sorting = progress.step === 'sorting' || progress.step === 'review';
+  const activeId = progress.activeIdea;
   const activeIdea = IDEA_PROMPTS.find(idea => idea.id === activeId);
   const category = activeId ? progress.assignments[activeId] : undefined;
   const unsorted = ideas.filter(id => !progress.assignments[id]);
@@ -103,6 +105,7 @@ export function SortStage({ progress, ideas, paused, reducedMotion, onChange, on
 
   function select(id: IdeaId) {
     onChange(current => ({ ...current, activeIdea: id }));
+    setFeedback(`${IDEA_PROMPTS.find(idea => idea.id === id)!.label} selected. Choose a conveyor.`);
     playSound();
   }
 
@@ -111,7 +114,7 @@ export function SortStage({ progress, ideas, paused, reducedMotion, onChange, on
     const previous = progress.assignments[id] ?? null;
     if (previous === target) { setFeedback('This idea is already on that belt. You can choose a different one.'); return; }
     setUndo({ id, previous });
-    onChange(current => assignIdea(current, ideas, id, target));
+    onChange(current => assignIdea({ ...current, step: 'sorting' }, ideas, id, target));
     const label = IDEA_PROMPTS.find(idea => idea.id === id)!.label;
     setFeedback(target ? `${label} moved to ${SORT_CATEGORIES.find(item => item.id === target)!.label}.` : `${label} returned to the unsorted tray.`);
     playSound(target ? 'chime' : 'click');
@@ -164,8 +167,15 @@ export function SortStage({ progress, ideas, paused, reducedMotion, onChange, on
   }
 
   function beginSorting() {
-    onChange(current => ({ ...current, step: 'sorting', activeIdea: current.activeIdea ?? ideas[0] ?? null, untimed: current.remainingMs === 0 ? true : current.untimed }));
+    onChange(current => ({ ...current, step: 'sorting', activeIdea: current.activeIdea, untimed: current.remainingMs === 0 ? true : current.untimed }));
     playSound();
+  }
+
+  function placeOnBelt(target: SortCategory) {
+    if (activeId) { place(activeId, target); return; }
+    setFeedback('Choose an ore from the tray first, then touch a conveyor.');
+    document.querySelector<HTMLButtonElement>('.sort-ore-grid .sort-ore')?.focus({ preventScroll: true });
+    playSound('click');
   }
 
   const groups = <div className="sort-review-groups">{SORT_CATEGORIES.map(item => <section key={item.id} style={{ '--belt-color': item.color } as CSSProperties}>
@@ -175,35 +185,43 @@ export function SortStage({ progress, ideas, paused, reducedMotion, onChange, on
   </section>)}{unsorted.length > 0 && <section className="unsorted-review"><h3>Still to sort<span>{unsorted.length}</span></h3><ul>{unsorted.map(id => <li key={id}><SortGem id={id} /><span>{IDEA_PROMPTS.find(idea => idea.id === id)!.text}</span></li>)}</ul></section>}</div>;
 
   return <div className={`sort-stage ${motionPaused ? 'sort-motion-paused' : ''}`}>
+    {progress.step === 'intro' && <button type="button" className="sort-machine-start" aria-label="Activate sorting conveyors" title="Activate sorting conveyors" onClick={beginSorting} disabled={!ideas.length}>
+      <span className="sort-machine-knob" aria-hidden="true"><Play /></span><span className="sort-machine-label" aria-hidden="true">Start conveyors</span>
+    </button>}
     <div className="sort-hud">
-      <div className={`forge-timer ${expired ? 'timer-expired' : ''}`}><Hourglass aria-hidden="true" /><div><span className="hud-label">{progress.untimed ? 'YOUR OWN PACE' : 'SORTING TIME'}</span><span role="timer" aria-live="off" aria-label="Sorting time remaining">{progress.untimed ? 'Untimed' : formatGenerateTime(progress.remainingMs)}</span></div>{sorting && !progress.untimed && <button aria-label={progress.timerPaused ? 'Resume timer' : 'Pause timer'} onClick={() => onChange(current => ({ ...current, timerPaused: !current.timerPaused }))}>{progress.timerPaused ? <Play /> : <Pause />}</button>}</div>
+      <div className={`forge-timer ${expired ? 'timer-expired' : ''}`}><StoryIcon name="hourglass" /><div><span className="hud-label">{progress.untimed ? 'YOUR OWN PACE' : 'SORTING TIME'}</span><span role="timer" aria-live="off" aria-label="Sorting time remaining">{progress.untimed ? 'Untimed' : formatGenerateTime(progress.remainingMs)}</span></div>{sorting && !progress.untimed && <button aria-label={progress.timerPaused ? 'Resume timer' : 'Pause timer'} onClick={() => onChange(current => ({ ...current, timerPaused: !current.timerPaused }))}>{progress.timerPaused ? <Play /> : <Pause />}</button>}</div>
       <button className="sort-progress" aria-label={`Review sorted ideas, ${sortedCount} of ${ideas.length}`} onClick={() => setReviewOpen(true)}><Layers3 /><span><small>IDEAS SORTED</small><strong>{sortedCount}<span> / {ideas.length}</span></strong></span></button>
-      {sorting && <button className="timer-mode" aria-pressed={progress.untimed} onClick={() => onChange(current => ({ ...current, untimed: !current.untimed, remainingMs: current.remainingMs || SORT_DURATION_MS }))}>{progress.untimed ? 'Use timer' : 'Sort without a timer'}</button>}
+      {sorting && <button className="timer-mode" aria-pressed={progress.untimed} onClick={() => onChange(current => ({ ...current, step: 'sorting', untimed: !current.untimed, remainingMs: current.remainingMs || SORT_DURATION_MS }))}>{progress.untimed ? 'Use timer' : 'Sort without a timer'}</button>}
     </div>
 
-    {progress.step === 'intro' && <Frame className="sort-title scene-enter"><p className="eyebrow">THE FORGE OF IDEAS</p><h1 ref={heading} tabIndex={-1}>Sorting Ideas</h1><Ornament /><p>Find what matters. Give every idea a place.</p><span className="stage-number">STAGE 03</span></Frame>}
+    {progress.step === 'intro' && <Frame className="sort-title scene-enter"><p className="eyebrow">The Forge of Ideas</p><h1 ref={heading} tabIndex={-1}>Sorting Ideas</h1><Ornament /><p>Find what matters. Give every idea a place.</p><span className="stage-number">STAGE 03</span></Frame>}
 
     {sorting && <>
       <h1 className="sr-only" ref={heading} tabIndex={-1}>Sort your ideas</h1>
-      <Frame className="sort-tray"><div className="sort-tray-heading"><span className="eyebrow">YOUR IDEA ORES</span><span>{unsorted.length} to sort</span></div><p>Select an ore, then a belt. Or drag it across.</p><div className="sort-ore-grid" role="group" aria-label="Unsorted ideas">{unsorted.map(ideaButton)}</div>{!unsorted.length && <div className="all-sorted"><Check /><h2>Every idea has a place.</h2><p>Select an ore on a belt to reconsider it.</p></div>}<button className="sort-undo" disabled={!undo} onClick={() => { if (!undo) return; onChange(current => assignIdea(current, ideas, undo.id, undo.previous)); setUndo(null); setFeedback('Last move undone.'); playSound(); }}><Undo2 /> Undo last move</button></Frame>
+      <Frame className="sort-tray"><div className="sort-tray-heading"><span className="eyebrow">YOUR IDEA ORES</span><span>{unsorted.length} to sort</span></div><p>Select an ore, then a belt. Or drag it across.</p><div className="sort-ore-grid" role="group" aria-label="Unsorted ideas">{unsorted.map(ideaButton)}{Array.from({ length: Math.max(0, 9 - unsorted.length) }, (_, i) => <span className="ore-preview empty-slot" key={`empty-${i}`} />)}</div>{!unsorted.length && <div className="all-sorted"><Check /><h2>Every idea has a place.</h2><p>Select an ore on a belt to reconsider it.</p></div>}<button className="sort-undo" disabled={!undo} onClick={() => { if (!undo) return; onChange(current => assignIdea(current, ideas, undo.id, undo.previous)); setUndo(null); setFeedback('Last move undone.'); playSound(); }}><Undo2 /> Undo last move</button></Frame>
       <div className="sorting-belts" aria-label="Sorting categories">{SORT_CATEGORIES.map(item => <section key={item.id} className={`sorting-belt belt-${item.id} ${overBelt === item.id ? 'belt-drag-over' : ''}`} style={{ '--belt-color': item.color } as CSSProperties} data-sort-category={item.id}>
         <div className="belt-running-surface" aria-hidden="true"><i /></div>
-        <button className="belt-destination" aria-label={`Move selected idea to ${item.label}`} onClick={() => activeId && place(activeId, item.id)}><strong>{item.label}</strong><span>{item.description}</span><small>{ideas.filter(id => progress.assignments[id] === item.id).length} ideas</small></button>
+        <button className="belt-destination" aria-label={`Move selected idea to ${item.label}`} onClick={() => placeOnBelt(item.id)}><strong>{item.label}</strong><span>{item.description}</span><small>{ideas.filter(id => progress.assignments[id] === item.id).length} ideas</small></button>
         <div className="belt-gems" role="group" aria-label={`${item.label} ideas`}>{ideas.filter(id => progress.assignments[id] === item.id).map(ideaButton)}</div>
-        <button className="belt-drop-zone" aria-label={`Place on ${item.label} belt`} onClick={() => activeId && place(activeId, item.id)}><span>Place here</span></button>
+        <button className="belt-drop-zone" aria-label={`Place on ${item.label} belt`} onClick={() => placeOnBelt(item.id)}><span>Place here</span></button>
       </section>)}</div>
+      {ready && <button type="button" className="sort-machine-finish" aria-label="Release the sorted ideas" title="Release the sorted ideas" onClick={onComplete}>
+        <span className="sort-machine-knob" aria-hidden="true"><Check /></span><span className="sort-machine-label" aria-hidden="true">Release ideas</span>
+      </button>}
+      <div key={feedback} className="sort-world-feedback" role="status" aria-live="polite">{ready ? 'All ideas sorted. Release them into the next chamber.' : feedback}</div>
     </>}
 
-    {progress.step === 'review' && <Frame className="sort-review scene-enter"><p className="eyebrow">{expired ? 'TIME TO REFLECT' : 'YOUR SORTING BENCH'}</p><h1 ref={heading} tabIndex={-1}>{ready ? 'A clearer way forward.' : 'A few ideas need a place.'}</h1><p>{sortedCount} of {ideas.length} ideas sorted. These are your choices, not a graded answer.</p>{groups}<button className="text-link sort-review-expand" onClick={() => setReviewOpen(true)}>Read all sorted ideas <ArrowRight size={13} /></button></Frame>}
+
 
     <section className="dialogue-scroll sort-dialogue" aria-label="Raven dialogue"><div className="scroll-paper" aria-hidden="true" /><div className="scroll-roll roll-left" aria-hidden="true" /><div className="scroll-roll roll-right" aria-hidden="true" /><div className="dialogue-content">
       <div className="dialogue-topline"><span className="speaker-label"><Feather />{sorting ? 'HOW DOES BRADBURY MAKE THIS MOMENT SO TENSE?' : 'YOUR RAVEN GUIDE'}</span><span className="dialogue-pagination">03 · SORT</span></div>
-      {sorting && activeIdea ? <><p className="sort-selected-source">{activeIdea.source} · {category ? `On the ${SORT_CATEGORIES.find(item => item.id === category)!.label} belt` : 'Not sorted yet'}</p><p className="dialogue-copy selected-sort-copy" aria-live="polite">{activeIdea.text}</p><p className="sort-guidance">{category ? SORT_CATEGORIES.find(item => item.id === category)!.guidance : 'Does this answer the question directly, support another idea, or lead away from the question? Check your classroom extract.'}</p></> : <p className="dialogue-copy">{progress.step === 'intro' ? 'Now let us consider how closely your ideas relate to the question. Use the green belt for central ideas, amber for supporting ideas, and blue for irrelevant ideas. Nothing is thrown away; you can always change your mind.' : ready ? 'You have considered the relevance of every idea. Return to the journey to save this milestone, or revisit a belt if your thinking has changed. Sorting helps you decide what deserves a place in your response.' : 'Your decisions are safe. Continue without a timer to give the remaining ideas a place before completing this stage.'}</p>}
+      <p className="dialogue-copy">{progress.step === 'intro' ? SCRIPT.sortIntro : SCRIPT.sort}</p>
+      {sorting && activeIdea && <p className="sort-selected-readout" aria-live="polite"><strong>{activeIdea.label}:</strong> {activeIdea.text}</p>}
       <div className="sort-dialogue-actions"><span role="status">{sorting ? feedback : progress.step === 'intro' ? `${ideas.length} collected ideas · 40-minute timer · untimed available` : 'You can revisit your choices from the journey map.'}</span>
         {progress.step === 'intro' && <GoldButton className="small" onClick={beginSorting} disabled={!ideas.length}>Start sorting <ArrowRight /></GoldButton>}
-        {sorting && <>{category && activeId && <button className="parchment-link" onClick={() => place(activeId, null)}>Return to tray</button>}<GoldButton className="small" disabled={!ready} onClick={() => { onChange(current => ({ ...current, step: 'review' })); playSound(); }}>Review sorting <ArrowRight /></GoldButton></>}
-        {progress.step === 'review' && <><button className="parchment-link" onClick={beginSorting}>{expired ? 'Continue untimed' : 'Reconsider ideas'}</button><GoldButton className="small" disabled={!ready} onClick={onComplete}>{progress.completed ? 'Return to journey' : 'Complete Stage 3'} <ArrowRight /></GoldButton></>}
-      </div></div><div className="dialogue-navigation"><RoundButton label="Previous" onClick={progress.step === 'review' ? beginSorting : onReturn}><ChevronLeft /></RoundButton></div></section>
+        {sorting && <>{category && activeId && <button className="parchment-link" onClick={() => place(activeId, null)}>Return to tray</button>}<GoldButton className="small" disabled={!ready} onClick={onComplete}>Complete Stage 3 <ArrowRight /></GoldButton></>}
+
+      </div></div><div className="dialogue-navigation"><RoundButton label="Previous" onClick={sorting ? () => onChange(current => ({ ...current, step: 'intro' })) : onReturn}><ChevronLeft /></RoundButton></div></section>
 
     {reviewOpen && <Modal title="Your sorting decisions" onClose={() => setReviewOpen(false)} className="sort-review-modal"><p className="modal-intro">{sortedCount} of {ideas.length} ideas sorted. Reconsider any category in the sorting activity. These choices are not marked right or wrong.</p>{groups}<GoldButton onClick={() => setReviewOpen(false)}>Return to sorting <RotateCcw /></GoldButton></Modal>}
     {dragId && <div className="sort-drag-ghost" ref={ghost} aria-hidden="true" style={{ transform: `translate3d(${(drag.current?.x ?? 0) - 20}px, ${(drag.current?.y ?? 0) - 24}px, 0)` }}><SortGem id={dragId} /></div>}

@@ -1,0 +1,54 @@
+.raven-flight-layer {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.raven-flight-wing {
+  opacity: 0;
+  transform-box: view-box;
+  transform-origin: 157px 119px;
+  pointer-events: none;
+}
+
+.raven-flight-active .raven-flight-wing {
+  opacity: 1;
+  animation: raven-wingbeat 300ms ease-in-out infinite alternate;
+}
+
+.raven-flight-active .raven-rig {
+  animation: raven-flight-body 300ms ease-in-out infinite alternate;
+  filter: drop-shadow(0 7px 5px #05070b66);
+}
+
+.raven-flight-active.raven-flight-left .raven-rig {
+  animation: raven-flight-turn-left var(--raven-flight-ms, 1350ms) ease-in-out both;
+}
+
+@keyframes raven-wingbeat {
+  from { transform: rotate(-15deg) scaleY(.72); }
+  to { transform: rotate(27deg) scaleY(1.12); }
+}
+
+@keyframes raven-flight-body {
+  from { transform: translateY(1px) rotate(-3deg); }
+  to { transform: translateY(-4px) rotate(2deg); }
+}
+
+@keyframes raven-flight-turn-left {
+  0%, 9% { transform: rotateY(0deg) rotate(-4deg); }
+  27%, 72% { transform: rotateY(180deg) rotate(-5deg); }
+  94%, 100% { transform: rotateY(0deg) rotate(0deg); }
+}
+
+.reduced-motion .raven-flight-active .raven-rig,
+.reduced-motion .raven-flight-active .raven-flight-wing {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raven-flight-active .raven-rig,
+  .raven-flight-active .raven-flight-wing { animation: none; }
+}

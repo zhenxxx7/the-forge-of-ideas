@@ -3,7 +3,7 @@ export const GENERATE_DURATION_MS = 60 * 60 * 1000;
 // The first prompt is visible in the supplied mockup. The others are editable
 // starter ideas, not quotations from or an answer key for the literary extract.
 export const IDEA_PROMPTS = [
-  { id: 'lifelike', label: 'Lifelike AI', text: 'AI is becoming more lifelike.', source: 'Mockup idea', prompt: 'Could this connection help you think about the boundary between something imagined and something real? Check it against your extract.' },
+  { id: 'lifelike', label: 'Lifelike AI', text: 'AI is becoming more lifelike.', source: 'General knowledge', prompt: 'Could this connection help you think about the boundary between something imagined and something real? Check it against your extract.' },
   { id: 'setting', label: 'The setting', text: 'A place that should feel safe can become unsettling.', source: 'Starter idea', prompt: 'Look again at the setting. What makes the place seem safe, strange, or threatening? Gather an idea before deciding how useful it is.' },
   { id: 'senses', label: 'Sensory detail', text: 'Vivid sensory details can make danger feel close.', source: 'Starter idea', prompt: 'Look for details of sight, sound, smell, or touch. Could any of them make the moment feel more immediate?' },
   { id: 'reactions', label: 'Reactions', text: 'A character’s reaction can reveal fear before danger is explained.', source: 'Starter idea', prompt: 'Notice what characters say and do. What might their reactions suggest to a reader?' },

@@ -12,7 +12,7 @@ describe('Stage 3 sorting and migrations', () => {
     const { sort: _sort, ...legacy } = previousSave;
     const restored = decodeSave(JSON.stringify(legacy));
     expect(restored).toMatchObject(legacy);
-    expect(restored?.sort).toEqual({ ...newSortProgress(), activeIdea: ids[0] });
+    expect(restored?.sort).toEqual(newSortProgress());
   });
 
   it('requires completed Stage 2 and valid Stage 1 before resuming Sort', () => {
@@ -21,7 +21,7 @@ describe('Stage 3 sorting and migrations', () => {
   });
 
   it('accepts only current pouch IDs and valid categories', () => {
-    expect(decodeSort({ assignments: { lifelike: 'central', setting: 'wrong', control: 'supporting', unknown: 'irrelevant' }, activeIdea: 'control', remainingMs: -1, step: 'sorting', completed: true, timerPaused: 'true' }, ids)).toEqual({ ...newSortProgress(), assignments: { lifelike: 'central' }, activeIdea: 'setting', remainingMs: 0, step: 'review' });
+    expect(decodeSort({ assignments: { lifelike: 'central', setting: 'wrong', control: 'supporting', unknown: 'irrelevant' }, activeIdea: 'control', remainingMs: -1, step: 'sorting', completed: true, timerPaused: 'true' }, ids)).toEqual({ ...newSortProgress(), assignments: { lifelike: 'central' }, activeIdea: null, remainingMs: 0, step: 'review' });
     expect(decodeSort({ remainingMs: Infinity }, []).remainingMs).toBe(SORT_DURATION_MS);
     expect(decodeSort({ remainingMs: 9e9, step: 'invalid' }, []).step).toBe('intro');
     expect(decodeSort({ remainingMs: 9e9 }, []).remainingMs).toBe(SORT_DURATION_MS);
@@ -51,7 +51,7 @@ describe('Stage 3 sorting and migrations', () => {
     const progress = { ...newSortProgress(), step: 'review' as const, assignments: { lifelike: 'central' as const, setting: 'supporting' as const }, completed: true, remainingMs: 12345 };
     const synced = reconcileSort(progress, ['setting', 'senses']);
     expect(synced).toMatchObject({ completed: false, step: 'sorting', assignments: { setting: 'supporting' }, remainingMs: 12345 });
-    expect(synced.activeIdea).toBe('senses');
+    expect(synced.activeIdea).toBeNull();
     expect(reconcileSort(progress, []).assignments).toEqual({});
   });
 

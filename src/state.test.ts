@@ -13,6 +13,13 @@ describe('save validation', () => {
     expect(decodeSave(JSON.stringify({ ...newSave('Sean'), screen: 'journey', completed: true }))).toMatchObject({ screen: 'prepare', completed: false });
     expect(decodeSave(JSON.stringify({ ...newSave('Sean'), screen: 'stage2' }))).toBeNull();
   });
+  it('migrates older journey recaps and clamps invalid recap indices', () => {
+    const old = { ...newSave('Sean'), screen: 'journey', completed: true, explored: ['how', 'moment', 'tense'], generate: { step: 'collected', selected: ['lifelike'], completed: true } };
+    const { journeyStage: _removed, ...legacy } = old;
+    expect(decodeSave(JSON.stringify(legacy))?.journeyStage).toBe(2);
+    expect(decodeSave(JSON.stringify({ ...old, journeyStage: 99 }))?.journeyStage).toBe(6);
+    expect(decodeSave(JSON.stringify({ ...old, journeyStage: -4 }))?.journeyStage).toBe(1);
+  });
   it('normalizes names without treating them as HTML', () => {
     expect(cleanName('  Sean   Lee\n ')).toBe('Sean Lee');
     expect(cleanName('x'.repeat(50))).toHaveLength(24);

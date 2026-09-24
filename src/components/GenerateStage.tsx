@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
-import { ArrowRight, Check, ChevronLeft, ChevronRight, Feather, Gem, Hourglass, Pause, Play, ShoppingBag, Sparkles, X } from 'lucide-react';
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
+import { ArrowRight, Check, ChevronLeft, ChevronRight, Feather, Gem, Pause, Play, ShoppingBag, Sparkles, X } from 'lucide-react';
 import { advanceGenerateTimer, formatGenerateTime, IDEA_PROMPTS, toggleIdea } from '../stage2';
 import type { GenerateProgress, GenerateStep } from '../stage2';
 import { Frame, GoldButton, RoundButton } from './GameUI';
 import { Ornament } from './Ornament';
 import { Modal } from './Modal';
 import { playSound } from '../audio';
+import { SCRIPT } from '../storyboard';
+import { StoryIcon } from './StoryIcon';
+import '../midstageInteraction.css';
 
 type Props = {
   progress: GenerateProgress;
@@ -35,6 +38,9 @@ function GatewayTransition({ open }: { open: boolean }) {
 export function GenerateStage({ progress, paused, onChange, onReturn, onComplete }: Props) {
   const [pouchOpen, setPouchOpen] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
+  const oreHold = useRef<{ pointer: number; x: number; y: number; element: HTMLButtonElement; timer: number } | null>(null);
+  const suppressOreClick = useRef(false);
+  const suppressionTimer = useRef<number | null>(null);
   const currentIndex = IDEA_PROMPTS.findIndex(idea => idea.id === progress.activeIdea);
   const idea = IDEA_PROMPTS[currentIndex];
   const isCollected = progress.selected.includes(idea.id);
@@ -43,6 +49,10 @@ export function GenerateStage({ progress, paused, onChange, onReturn, onComplete
   const expired = progress.remainingMs === 0 && !progress.untimed;
 
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, [progress.step]);
+  useEffect(() => () => {
+    if (oreHold.current) window.clearTimeout(oreHold.current.timer);
+    if (suppressionTimer.current !== null) window.clearTimeout(suppressionTimer.current);
+  }, []);
 
   useEffect(() => {
     if (!exploring || progress.timerPaused || progress.untimed || paused || pouchOpen) return;
@@ -79,22 +89,64 @@ export function GenerateStage({ progress, paused, onChange, onReturn, onComplete
     playSound(isCollected ? 'click' : 'chime');
   }
 
+  function cancelOreHold() {
+    const held = oreHold.current;
+    if (!held) return;
+    window.clearTimeout(held.timer);
+    held.element.classList.remove('ore-holding');
+    oreHold.current = null;
+  }
+
+  function finishOreHold() {
+    cancelOreHold();
+    if (suppressOreClick.current) {
+      if (suppressionTimer.current !== null) window.clearTimeout(suppressionTimer.current);
+      suppressionTimer.current = window.setTimeout(() => { suppressOreClick.current = false; suppressionTimer.current = null; }, 500);
+    }
+  }
+
+  function beginOreHold(event: ReactPointerEvent<HTMLButtonElement>, id: typeof idea.id) {
+    if (event.button !== 0) return;
+    cancelOreHold();
+    const element = event.currentTarget;
+    element.classList.add('ore-holding');
+    const pointer = event.pointerId;
+    const x = event.clientX;
+    const y = event.clientY;
+    const timer = window.setTimeout(() => {
+      if (oreHold.current?.pointer !== pointer) return;
+      suppressOreClick.current = true;
+      onChange(current => toggleIdea({ ...current, activeIdea: id }, id));
+      playSound(progress.selected.includes(id) ? 'click' : 'chime');
+      cancelOreHold();
+    }, 550);
+    oreHold.current = { pointer, x, y, element, timer };
+  }
+
+  function moveOreHold(event: ReactPointerEvent<HTMLButtonElement>) {
+    const held = oreHold.current;
+    if (held?.pointer === event.pointerId && Math.hypot(event.clientX - held.x, event.clientY - held.y) > 12) cancelOreHold();
+  }
+
   const dialogue = progress.step === 'entrance'
-    ? 'When you are ready, let us enter the Forge. A new world of possibilities is waiting on the other side.'
+    ? SCRIPT.entrance
     : progress.step === 'intro'
-      ? 'Welcome to our first stop in the Forge of Ideas. When approaching a question, we begin by generating ideas. Explore the glowing ores, read each possibility, and collect the ideas you would like to keep. We will sort them later.'
+      ? SCRIPT.generateIntro
       : progress.step === 'explore'
-        ? idea.prompt
+        ? SCRIPT.generateExplore
         : hasIdeas
-          ? 'You have selected a mix of ideas. It is good to let the ideas flow when you first approach a text. These are starting points, not a finished answer. You can return to this stage to reread, reconsider, and gather different ideas.'
+          ? SCRIPT.generateCollected
           : 'Your pouch is still empty. There is no penalty for taking your time. Return to the gateway and gather an idea that you would like to explore.';
 
   return <>
     <GatewayTransition open={progress.step !== 'entrance'} />
     <div className="forge-motes" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <i key={index} style={{ '--mote': index } as CSSProperties} />)}</div>
+    {(progress.step === 'entrance' || progress.step === 'intro') && <button type="button" className={`forge-gateway-hotspot ${progress.step === 'intro' ? 'gateway-step-through' : ''}`} aria-label={progress.step === 'entrance' ? 'Open the Forge gateway' : 'Step through the Forge gateway'} title={progress.step === 'entrance' ? 'Open the Forge gateway' : 'Step through the Forge gateway'} onClick={() => go(progress.step === 'entrance' ? 'intro' : 'explore')}>
+      <span className="gateway-handle-cue" aria-hidden="true" /><span className="gateway-action-cue" aria-hidden="true">{progress.step === 'entrance' ? 'Open gateway' : 'Step inside'}</span>
+    </button>}
     <div className="forge-hud">
       <div className={`forge-timer ${expired ? 'timer-expired' : ''}`}>
-        <Hourglass aria-hidden="true" />
+        <StoryIcon name="hourglass" />
         <div><span className="hud-label">{progress.untimed ? 'YOUR OWN PACE' : 'EXPLORATION TIME'}</span><span role="timer" aria-live="off" aria-label={progress.untimed ? 'Untimed exploration' : 'Time remaining'}>{progress.untimed ? 'Untimed' : formatGenerateTime(progress.remainingMs)}</span></div>
         {exploring && !progress.untimed && <button aria-label={progress.timerPaused ? 'Resume timer' : 'Pause timer'} title={progress.timerPaused ? 'Resume timer' : 'Pause timer'} onClick={() => onChange(current => ({ ...current, timerPaused: !current.timerPaused }))}>{progress.timerPaused ? <Play /> : <Pause />}</button>}
       </div>
@@ -107,19 +159,19 @@ export function GenerateStage({ progress, paused, onChange, onReturn, onComplete
     {progress.step === 'entrance' && <h1 className="sr-only" ref={heading} tabIndex={-1}>Enter the Forge</h1>}
 
     {progress.step === 'intro' && <Frame className="generate-title scene-enter">
-      <p className="eyebrow">THE FORGE OF IDEAS</p><h1 ref={heading} tabIndex={-1}>Generating Ideas</h1><Ornament /><p>Every possibility begins with a spark.</p><span className="stage-number">STAGE 02</span>
+      <p className="eyebrow">The Forge of Ideas</p><h1 ref={heading} tabIndex={-1}>Generating Ideas</h1><Ornament /><p>Every possibility begins with a spark.</p><span className="stage-number">STAGE 02</span>
     </Frame>}
 
     {exploring && <div className="idea-exploration">
       <h1 className="sr-only" ref={heading} tabIndex={-1}>Gather your ideas</h1>
-      <div className="idea-charms" role="group" aria-label="Idea prompts">{IDEA_PROMPTS.map((item, index) => <button key={item.id} className={`ore-button ore-${index} ${item.id === idea.id ? 'active-ore' : ''} ${progress.selected.includes(item.id) ? 'collected-ore' : ''}`} aria-label={`Explore ${item.label}`} aria-pressed={item.id === idea.id} onClick={() => select(index)}>
+      <div className="idea-charms" role="group" aria-label="Idea prompts">{IDEA_PROMPTS.map((item, index) => <button key={item.id} className={`ore-button ore-${index} ${item.id === idea.id ? 'active-ore' : ''} ${progress.selected.includes(item.id) ? 'collected-ore' : ''}`} aria-label={`Explore ${item.label}`} aria-pressed={item.id === idea.id} title={`Tap to inspect ${item.label}; hold to ${progress.selected.includes(item.id) ? 'return it to the forest' : 'gather it'}`} onPointerDown={event => beginOreHold(event, item.id)} onPointerMove={moveOreHold} onPointerUp={finishOreHold} onPointerCancel={finishOreHold} onContextMenu={event => event.preventDefault()} onClick={() => { if (suppressOreClick.current) { suppressOreClick.current = false; return; } select(index); }}>
         <span className="ore-crystal"><IdeaOre />{progress.selected.includes(item.id) && <Check className="ore-check" />}</span><span className="ore-caption">{item.label}</span>
       </button>)}</div>
       <Frame className="idea-card">
         <div className="idea-card-heading"><span className="eyebrow">{idea.source}</span><span>{String(currentIndex + 1).padStart(2, '0')} / 08</span></div>
         <div key={idea.id} className="idea-copy text-enter" aria-live="polite" aria-atomic="true"><h2>{idea.text}</h2><Ornament /></div>
         <div className="idea-card-actions"><button className="idea-arrow" aria-label="Previous idea" onClick={() => select(currentIndex - 1)}><ChevronLeft /></button><GoldButton className={isCollected ? 'idea-collected' : ''} onClick={collect}>{isCollected ? <><Check /> In your pouch</> : <><Gem /> Collect idea</>}</GoldButton><button className="idea-arrow" aria-label="Next idea" onClick={() => select(currentIndex + 1)}><ChevronRight /></button></div>
-        <p className="idea-action-hint">{isCollected ? 'Select again to remove it. You can change your mind.' : 'Collect what sparks a thought. No sorting yet.'}</p>
+        <p className="idea-action-hint">{isCollected ? 'In your pouch. Hold this ore to return it.' : 'Tap an ore to inspect it. Hold it to gather it.'}</p>
       </Frame>
       <span className="collection-feedback" role="status" key={progress.selected.join('-')}>{hasIdeas ? `${progress.selected.length} ${progress.selected.length === 1 ? 'idea' : 'ideas'} in your pouch` : 'Your first idea is waiting.'}</span>
     </div>}

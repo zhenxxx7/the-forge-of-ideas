@@ -19,6 +19,7 @@ export type Save = {
   name: string;
   screen: Extract<Screen, 'prologue' | 'prepare' | 'journey' | 'generate' | 'sort' | 'connect' | 'elaborate' | 'challenge' | 'ending'>;
   prologueIndex: number;
+  journeyStage: number;
   explored: Keyword[];
   completed: boolean;
   generate: GenerateProgress;
@@ -36,7 +37,7 @@ export function cleanName(value: string): string {
 }
 
 export function newSave(name: string): Save {
-  return { version: 1, name: cleanName(name), screen: 'prologue', prologueIndex: 0, explored: [], completed: false, generate: newGenerateProgress(), sort: newSortProgress(), connect: newConnectProgress(), elaborate: newElaborateProgress(), challenge: newChallengeProgress(), ending: newEndingProgress() };
+  return { version: 1, name: cleanName(name), screen: 'prologue', prologueIndex: 0, journeyStage: 1, explored: [], completed: false, generate: newGenerateProgress(), sort: newSortProgress(), connect: newConnectProgress(), elaborate: newElaborateProgress(), challenge: newChallengeProgress(), ending: newEndingProgress() };
 }
 
 export function decodeSave(raw: string | null): Save | null {
@@ -70,6 +71,7 @@ export function decodeSave(raw: string | null): Save | null {
       version: 1, name: cleanName(s.name),
       screen,
       prologueIndex: Number.isInteger(s.prologueIndex) ? Math.max(0, Math.min(2, s.prologueIndex!)) : 0,
+      journeyStage: Number.isInteger(s.journeyStage) ? Math.max(1, Math.min(6, s.journeyStage!)) : challenge.completed ? 6 : elaborate.completed ? 5 : connect.completed ? 4 : sort.completed ? 3 : generate.completed ? 2 : 1,
       explored, completed, generate, sort, connect, elaborate, challenge, ending,
     };
   } catch { return null; }

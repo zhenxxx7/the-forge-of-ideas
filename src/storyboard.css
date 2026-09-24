@@ -1,0 +1,574 @@
+/* Storyboard presentation. Learning models, journal and dialog editors remain HTML. */
+.storyboard-game { --scene-ink: #49371f; background: #090d13; }
+.storyboard-game .game-frame { width: min(100vw, 177.777778svh); height: auto; min-height: 0; aspect-ratio: 16 / 9; }
+.storyboard-game .scene-header,
+.storyboard-game .hero-kicker,
+.storyboard-game .landing-caption,
+.storyboard-game .landing-footer,
+.storyboard-game .utility-bar,
+.storyboard-game .save-indicator:not(:has(.failed)),
+.storyboard-game .dialogue-topline,
+.storyboard-game .continue-hint,
+.storyboard-game .local-note,
+.storyboard-game .prologue-intro,
+.storyboard-game .question-topline,
+.storyboard-game .keyword-prompt,
+.storyboard-game .question-source { display: none; }
+.storyboard-game .room-vignette { background: radial-gradient(ellipse at center, transparent 55%, #05080e20); }
+.storyboard-game .side-tools { top: 5.6%; right: 3%; gap: .6cqw; flex-direction: column; }
+.storyboard-game .side-tools .round-button { width: 4.5cqw; height: 4.5cqw; }
+.storyboard-game .game-frame:not(.screen-journey) .side-tools .round-button:nth-child(4) { display: none; }
+.storyboard-game .round-button { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.storyboard-game .round-button::after { display: none; }
+.storyboard-game .story-icon { display: block; width: 100%; height: 100%; object-fit: contain; }
+.storyboard-game .forge-timer { pointer-events: auto; }
+.storyboard-game .round-button > .story-icon { border-radius: 50%; }
+.storyboard-game .round-button:hover:not(:disabled) { background: transparent; box-shadow: 0 0 12px #e5c07355; }
+.storyboard-game .round-button:focus-visible { outline: 2px solid #ffe5ae; outline-offset: 3px; }
+.storyboard-game .button-tooltip { font: 12px Georgia, serif; }
+.storyboard-game .ornate-panel { background: linear-gradient(110deg, #080a0bc7, #111313ab); }
+.storyboard-game .corner { width: 4cqw; height: 4cqw; }
+.storyboard-game .ornate-panel > .bottom-left,
+.storyboard-game .ornate-panel > .bottom-right { display: none; }
+.storyboard-game .sort-gem,
+.storyboard-game .connection-crystal,
+.storyboard-game .infusion-vial { object-fit: contain; }
+
+/* One parchment, two small navigation arrows, identical across the journey. */
+.storyboard-game .game-frame .dialogue-scroll {
+  position: absolute; top: auto; bottom: 4.5%; left: 11.5%; width: 80%; height: 27%; min-height: 0;
+  color: var(--scene-ink); filter: drop-shadow(0 4px 5px #0006);
+}
+.storyboard-game .scroll-paper {
+  inset: 0; background: url('/assets/forge-dialogue-parchment.webp') center / 100% 100% no-repeat;
+  clip-path: none; box-shadow: none; pointer-events: none;
+  animation: parchment-unfurl 760ms ease-in-out both;
+}
+.storyboard-game .scroll-roll {
+  display: block; top: 0; bottom: 0; width: 3.2%; z-index: 1; pointer-events: none;
+  background: url('/assets/forge-dialogue-parchment.webp') left center / 3125% 100% no-repeat;
+  clip-path: none; box-shadow: none; transform: none; opacity: 0;
+  will-change: left, right, opacity;
+}
+.storyboard-game .scroll-roll.roll-left { left: 0; box-shadow: inset -5px 0 6px #67442188, inset 3px 0 5px #fff0c888; animation: parchment-left-roll 760ms ease-in-out both; }
+.storyboard-game .scroll-roll.roll-right { right: 0; background-position: right center; box-shadow: inset 5px 0 6px #67442188, inset -3px 0 5px #fff0c888; animation: parchment-right-roll 760ms ease-in-out both; }
+.storyboard-game .game-frame .dialogue-content { position: static; padding: 2.5cqw 4.8cqw 2cqw; animation: parchment-ink 260ms ease-out 760ms both; }
+.storyboard-game .dialogue-scroll > .dialogue-navigation { animation: parchment-ink 230ms ease-out 820ms both; }
+@keyframes parchment-unfurl { from { clip-path: inset(0 48.4% 0 48.4%); } to { clip-path: inset(0); } }
+@keyframes parchment-left-roll { 0% { left: 46.8%; opacity: 1; } 84% { opacity: 1; } 100% { left: 0; opacity: 0; } }
+@keyframes parchment-right-roll { 0% { right: 46.8%; opacity: 1; } 84% { opacity: 1; } 100% { right: 0; opacity: 0; } }
+/* A transformed content layer would anchor its absolute action button above the paper controls. */
+@keyframes parchment-ink { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .storyboard-game .scroll-paper,
+  .storyboard-game .scroll-roll,
+  .storyboard-game .game-frame .dialogue-content,
+  .storyboard-game .dialogue-scroll > .dialogue-navigation { animation: none !important; }
+}
+.storyboard-game .game-frame .dialogue-copy { position: relative; margin: 0; font: 400 1.34cqw/1.32 'Volkhov', Georgia, serif; }
+.storyboard-game .game-frame .dialogue-hint { font: italic 1cqw/1.4 Georgia, serif; }
+.storyboard-game .game-frame .dialogue-navigation { bottom: 6%; right: -4.7%; gap: 1.05cqw; }
+.storyboard-game .game-frame .dialogue-navigation .round-button,
+.storyboard-game .scene-navigation .round-button { width: 3.35cqw; height: 3.35cqw; }
+.storyboard-game .screen-prologue .dialogue-navigation,
+.storyboard-game .screen-prepare .dialogue-navigation { right: -10%; }
+.storyboard-game .dialogue-scroll [class$="-dialogue-actions"],
+.storyboard-game .dialogue-scroll .journey-finish { position: static; margin: 0; }
+.storyboard-game .dialogue-scroll [class$="-dialogue-actions"] > span,
+.storyboard-game .dialogue-scroll .parchment-link { display: none; }
+.storyboard-game .dialogue-scroll .gold-button:not(.modal .gold-button) {
+  position: absolute; right: -10%; bottom: 6%; width: 3.35cqw; height: 3.35cqw;
+  min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 50%; clip-path: none;
+  background: url('/assets/navigation-next.svg') center / contain no-repeat; filter: none;
+}
+.storyboard-game .dialogue-scroll .gold-button:not(.modal .gold-button) > span {
+  position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.storyboard-game .dialogue-scroll .gold-button:not(.modal .gold-button):hover:not(:disabled) { filter: brightness(1.3); }
+.storyboard-game .dialogue-scroll .gold-button:not(.modal .gold-button):focus-visible { outline: 2px solid #ffe5ae; outline-offset: 3px; }
+.storyboard-game .dialogue-navigation .round-button:is(:hover,:focus-visible) .button-tooltip { transform: translateX(-50%); }
+.storyboard-game .scene-navigation { position: absolute; right: 3%; bottom: 5.7%; z-index: 9; display: flex; gap: 1.05cqw; pointer-events: auto; }
+
+/* Landing, name and question. */
+.storyboard-game .hero-title { top: 25%; left: 54%; width: 48%; }
+.storyboard-game .storybook-wordmark { display: block; width: 100%; height: auto; filter: drop-shadow(2px 4px 3px #a8936d60); }
+.storyboard-game .hero-title h1 { font-size: 10cqw; letter-spacing: -.02em; }
+.storyboard-game .title-the { font-size: 3.25cqw; padding-left: 23%; }
+.storyboard-game .moe-crest { width: 5.8%; top: 6%; }
+.storyboard-game .landing-actions { top: 63%; width: 24%; z-index: 6; }
+.storyboard-game .landing-actions .gold-button { min-height: 3.3cqw; font-size: 1.08cqw; }
+.storyboard-game .landing-actions .gold-button svg { display: none; }
+.storyboard-game .landing-letter { position: absolute; z-index: 5; left: 48%; top: 74%; width: 15%; height: 12%; border: 0; background: transparent; cursor: pointer; transform: rotate(-5deg); }
+.storyboard-game .landing-letter:hover { background: radial-gradient(ellipse at 30% 43%, #ffe2a755, transparent 58%); filter: drop-shadow(0 0 13px #ffcc73a0); }
+.storyboard-game .landing-letter:focus-visible { outline: 3px solid #ffe2a7; outline-offset: 3px; border-radius: 16px; }
+.storyboard-game .name-panel { top: 24%; left: 33.5%; width: 33%; padding: 3.6cqw 3.3cqw 1.2cqw; }
+.storyboard-game .name-panel > .eyebrow,
+.storyboard-game .name-panel .panel-subtitle,
+.storyboard-game .name-field > svg { display: none; }
+.storyboard-game .name-panel h1 { font: 400 1.75cqw/1.4 'Cinzel',serif; margin: 0 0 1.8cqw; }
+.storyboard-game .name-field { padding: .4cqw 1.6cqw; border-radius: 2cqw; }
+.storyboard-game .name-field input { font: 1.6cqw Georgia,serif; }
+.storyboard-game .field-help { height: 1.4cqw; min-height: 0; margin: .7cqw 0; visibility: hidden; }
+.storyboard-game .field-help.error { visibility: visible; font-size: .9cqw; }
+.storyboard-game .form-actions { gap: 1.7cqw; }
+.storyboard-game .form-actions .gold-button,
+.storyboard-game .form-actions .quiet-button { min-width: 10.5cqw; min-height: 3.2cqw; font: 600 1.1cqw 'Cinzel',serif; }
+.storyboard-game .form-actions .quiet-button { color: #fff2d2; background: linear-gradient(#d1ae66,#a07936 50%,#77531e); clip-path: polygon(12% 0,88% 0,100% 50%,88% 100%,12% 100%,0 50%); }
+.storyboard-game .name-panel .ornament { width: 100%; margin: 2.8cqw auto 0; }
+.storyboard-game .question-panel { top: 20.5%; left: 35%; width: 34%; padding: 3.1cqw 3.8cqw 2.3cqw; }
+.storyboard-game .question-panel h1 { font: 400 1.98cqw/1.25 'Volkhov',Georgia,serif; text-align: center; }
+.storyboard-game .question-panel .ornament { width: 100%; margin: 1.65cqw auto 1.7cqw; opacity: .32; }
+.storyboard-game .keyword-buttons { gap: 1cqw; margin-inline: -.8cqw; }
+.storyboard-game .keyword-button { flex: auto; min-height: 2.3cqw; font: 1.18cqw Georgia,serif; padding: .3cqw .7cqw; border-color: #bcb9a4; }
+.storyboard-game .keyword-button svg { display: none; }
+.storyboard-game .question-panel mark[role="button"] { cursor: pointer; border-radius: 3px; }
+.storyboard-game .question-panel mark[role="button"]:hover,
+.storyboard-game .question-panel mark[role="button"]:focus-visible { color: #ffe2a4; text-shadow: 0 0 14px #ffc063ad; text-decoration-color: #ffe2a4; }
+.storyboard-game .question-panel mark[role="button"]:focus-visible { outline: 2px solid #ffe2a4; outline-offset: 4px; }
+
+/* Map: one scroll, four craft icons, then beast and archive. */
+.storyboard-game .journey-panel { left: 35%; top: 15%; width: 34%; height: 44%; padding: 2cqw 2.5cqw; }
+.storyboard-game .journey-map { display: grid; grid-template-columns: repeat(8,1fr); grid-template-rows: repeat(3,1fr); gap: 1.4cqw; height: 100%; align-items: center; }
+.storyboard-game .stage-tile { position: relative; display: block; grid-column: span 2; padding: 0; width: 100%; aspect-ratio: 1; border: 1px solid transparent; border-radius: 3px; background: none; color: inherit; }
+.storyboard-game .stage-tile img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 2px; }
+.storyboard-game .tile-prepare { grid-column: 4 / span 2; grid-row: 1; }
+.storyboard-game .tile-generate { grid-column: 1 / span 2; grid-row: 2; }
+.storyboard-game .tile-sort { grid-column: 3 / span 2; grid-row: 2; }
+.storyboard-game .tile-connect { grid-column: 5 / span 2; grid-row: 2; }
+.storyboard-game .tile-elaborate { grid-column: 7 / span 2; grid-row: 2; }
+.storyboard-game .tile-challenge { grid-column: 3 / span 2; grid-row: 3; }
+.storyboard-game .tile-archive { grid-column: 5 / span 2; grid-row: 3; }
+.storyboard-game .stage-tile.completed-stage { border-color: #c2bda9; }
+.storyboard-game .stage-tile.locked-stage { opacity: .43; }
+.storyboard-game .stage-tile:hover:not(:disabled) { border-color: #f6d287; filter: brightness(1.2); }
+.storyboard-game .map-quill { position: absolute; width: 90%; height: 160%; bottom: 45%; left: 55%; transform: rotate(15deg); pointer-events: none; filter: drop-shadow(1px 2px 1px #000a); }
+.storyboard-game .recap-timer { position: absolute; top: 5.5%; left: 50%; transform: translateX(-50%); z-index: 6; }
+
+/* Compact hourglass. Timer options remain discoverable on hover or keyboard focus. */
+.storyboard-game :is(.forge-hud,.sort-hud,.connect-hud,.elaborate-hud) { top: 5.7%; left: 50%; width: auto; transform: translateX(-50%); gap: .65cqw; }
+.storyboard-game .forge-timer { position: relative; min-height: 3.65cqw; border: 2px solid #ae9963; padding: .18cqw 1cqw .18cqw .5cqw; gap: .4cqw; border-radius: 4cqw; background: #110f0cec; box-shadow: 0 3px 1px #7b4f2480; }
+.storyboard-game .forge-timer > div { min-width: 0; }
+.storyboard-game .forge-timer.recap-timer { position: absolute; width: max-content; }
+.storyboard-game .forge-timer [role="timer"] { color: #ffb84b; font: 1.95cqw/1.3 Georgia,serif; font-variant-numeric: tabular-nums; }
+.storyboard-game .forge-timer .story-icon-hourglass { width: 2.6cqw; height: 3cqw; }
+.storyboard-game .hud-label { display: none; }
+.storyboard-game .forge-timer > button { position: absolute; left: 100%; margin-left: .6cqw; width: 2.7cqw; height: 2.7cqw; opacity: 0; pointer-events: none; background: #17171ef0; }
+.storyboard-game .forge-timer:hover > button,
+.storyboard-game .forge-timer:focus-within > button { opacity: 1; pointer-events: auto; }
+.storyboard-game .forge-timer > button svg { width: 1.3cqw; height: 1.3cqw; }
+.storyboard-game .timer-mode { position: absolute; top: 100%; left: 0; min-width: 100%; font: .8cqw Georgia,serif; padding: .5cqw; opacity: 0; background: #13171ff0; }
+.storyboard-game :is(.forge-hud,.sort-hud,.connect-hud,.elaborate-hud):hover .timer-mode,
+.storyboard-game .timer-mode:focus-visible { opacity: 1; }
+.storyboard-game :is(.sort-progress,.connect-progress,.elaborate-meter) { position: absolute; top: 0; left: calc(100% + 3.7cqw); width: 3.6cqw; height: 3.6cqw; min-height: 0; padding: .6cqw; border-radius: 50%; opacity: .6; }
+.storyboard-game :is(.sort-progress,.connect-progress,.elaborate-meter) > span { display: none; }
+.storyboard-game :is(.sort-progress,.connect-progress,.elaborate-meter):hover { opacity: 1; }
+.storyboard-game :is(.sort-phase-intro,.connect-phase-intro,.elaborate-phase-intro) :is(.sort-progress,.connect-progress,.elaborate-meter) { display: none; }
+
+/* Stage 2: entrance, title, ideas, pouch. */
+.storyboard-game .forge-pouch-meter { min-height: 3.65cqw; min-width: 10.4cqw; padding: .3cqw .8cqw; gap: .4cqw; border: 2px solid #ae9963; background: #17110be8; }
+.storyboard-game .forge-pouch-meter > svg { width: 2.4cqw; height: 2.6cqw; fill: #d5a464; color: #f4d49a; }
+.storyboard-game .forge-pouch-meter strong { display: none; }
+.storyboard-game .pouch-meter-track { margin: 0; width: 5.8cqw; height: 1.15cqw; }
+.storyboard-game :is(.generate-entrance,.generate-intro) .forge-pouch-meter { display: none; }
+.storyboard-game :is(.generate-title,.sort-title,.elaborate-title) { left: 34%; top: 25%; width: 33%; padding: 4cqw 2.5cqw 1.5cqw; }
+.storyboard-game :is(.generate-title,.sort-title,.elaborate-title) > .eyebrow { font: 400 2cqw/1.3 'Volkhov',Georgia,serif; letter-spacing: 0; text-transform: none; color: #ffe8ba; }
+.storyboard-game :is(.generate-title,.sort-title,.elaborate-title) h1 { font: 400 2cqw/1.35 'Volkhov',Georgia,serif; margin: .7cqw 0 1.3cqw; color: #ffe8ba; }
+.storyboard-game :is(.generate-title,.sort-title,.elaborate-title) > p:last-of-type:not(.eyebrow),
+.storyboard-game .stage-number { display: none; }
+.storyboard-game :is(.generate-title,.sort-title,.elaborate-title) .ornament { width: 100%; margin: 0; }
+.storyboard-game .idea-card { left: 33%; top: 30%; width: 34%; padding: 4cqw 2.2cqw 1.2cqw; min-height: 0; background: #090807aa; }
+.storyboard-game .idea-card-heading,
+.storyboard-game .idea-action-hint,
+.storyboard-game .collection-feedback,
+.storyboard-game .ore-caption { display: none; }
+.storyboard-game .idea-copy h2 { font: 400 2.04cqw/1.3 'Volkhov',Georgia,serif; margin: 0; }
+.storyboard-game .idea-copy .ornament { margin: 1.6cqw auto .6cqw; opacity: .4; }
+.storyboard-game .idea-card-actions { margin: .5cqw 0 0; gap: .4cqw; opacity: 0; transition: opacity 180ms; }
+.storyboard-game .idea-card:hover .idea-card-actions,
+.storyboard-game .idea-card:focus-within .idea-card-actions { opacity: 1; }
+.storyboard-game .idea-card-actions .gold-button { min-height: 2.5cqw; font-size: .9cqw; min-width: 15cqw; }
+.storyboard-game .idea-arrow { width: 2.5cqw; height: 2.5cqw; }
+.storyboard-game .ore-button { width: 4cqw; opacity: .55; }
+.storyboard-game .ore-button:hover,
+.storyboard-game .ore-button:focus-visible,
+.storyboard-game .ore-button.active-ore { opacity: 1; }
+.storyboard-game .ore-crystal { width: 2.7cqw; height: 3.3cqw; }
+.storyboard-game .collected-heading,
+.storyboard-game .collected-pouch > span { display: none; }
+.storyboard-game .collected-pouch { top: 18%; left: 50%; width: 35%; height: 49%; padding: 0; border: 0; background: none; transform: translateX(-50%); }
+.storyboard-game .collected-pouch img { width: 100%; height: 100%; object-fit: contain; }
+.storyboard-game .screen-generate .raven-character.raven-guide { left: 7%; bottom: 34%; width: 17%; height: 25%; }
+
+/* Stage 3: original three-belt room and compact 3 by 3 tray. */
+.storyboard-game .sort-title { top: 26%; }
+.storyboard-game .sort-tray { left: 13.5%; top: 15%; width: 26%; height: 43%; padding: 2.3cqw 2.4cqw 1.4cqw; }
+.storyboard-game .sort-tray-heading,
+.storyboard-game .sort-tray > p,
+.storyboard-game .all-sorted { display: none; }
+.storyboard-game .sort-ore-grid,
+.storyboard-game .mockup-ore-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); grid-template-rows: repeat(3,1fr); gap: 1.2cqw; height: 100%; flex: 1; align-content: start; }
+.storyboard-game .sort-ore,
+.storyboard-game .ore-preview { min-height: 0; padding: .7cqw; aspect-ratio: 1; display: grid; place-items: center; border: 1px solid #b8ae956b; border-radius: 3px; background: linear-gradient(#030505b8 70%,#aa87572e); }
+.storyboard-game .sort-ore > span,
+.storyboard-game .connection-ore > span,
+.storyboard-game .crystal-choice > span { display: none; }
+.storyboard-game .sort-ore .sort-gem,
+.storyboard-game .ore-preview .sort-gem { width: 100%; height: 100%; max-height: 4.6cqw; }
+.storyboard-game .empty-slot { opacity: .45; }
+.storyboard-game .sort-undo { position: absolute; right: 3%; top: 101%; min-height: 2cqw; padding: .25cqw .6cqw; font-size: .85cqw; background: #11141ddd; border-radius: 3px; }
+.storyboard-game .sorting-belt { top: 15%; height: 48%; width: 11%; padding: 0; background: none; }
+.storyboard-game .belt-central { left: 45.5%; }
+.storyboard-game .belt-supporting { left: 60%; }
+.storyboard-game .belt-irrelevant { left: 74.5%; }
+.storyboard-game .belt-destination { min-height: 2.5cqw; padding: .2cqw; border: 1px solid #d1c5a285; border-radius: 3px; background: #000a; }
+.storyboard-game .belt-destination strong { font: 1.35cqw Georgia,serif; color: #f4f3e7; }
+.storyboard-game .belt-destination > span,
+.storyboard-game .belt-destination > small,
+.storyboard-game .belt-drop-zone span { display: none; }
+.storyboard-game .belt-running-surface { opacity: .28; }
+.storyboard-game .belt-gems { padding: .8cqw; gap: .5cqw; overflow: auto; }
+.storyboard-game .belt-gems .sort-ore { width: 100%; height: 3.6cqw; padding: .3cqw; }
+.storyboard-game .belt-gems .sort-gem { width: 2.6cqw; height: 2.6cqw; }
+.storyboard-game .belt-drop-zone { min-height: 5cqw; flex: 1; border: 0; background: transparent; }
+.storyboard-game .sort-selected-readout { position: relative; font: 1.1cqw/1.4 Georgia,serif; margin: 1.1cqw 0 0; }
+.storyboard-game .screen-sort .raven-character.raven-guide { left: 8%; bottom: 35%; width: 15%; height: 22%; }
+
+/* Stage 4: ore inventories, receptacles and one central crystal. */
+.storyboard-game .connect-intro-inventory { top: 17%; left: 37%; width: 26%; height: 42%; padding: 2cqw 2.3cqw; }
+.storyboard-game .connect-inventory { top: 5.5%; width: 25%; height: 17%; max-height: none; padding: 1.7cqw 2.1cqw; }
+.storyboard-game .inventory-central { left: 12%; }
+.storyboard-game .inventory-supporting { right: 12%; }
+.storyboard-game .connect-inventory-heading { display: none; }
+.storyboard-game .connect-inventory-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1.2cqw; }
+.storyboard-game .connection-ore { aspect-ratio: 1; padding: .8cqw; min-height: 0; background: linear-gradient(#030505b8 70%,#aa87572e); border-color: #b8ae956b; }
+.storyboard-game .connection-ore .sort-gem { width: 100%; height: 100%; }
+.storyboard-game .linked-ore-check { width: .8cqw; height: .8cqw; }
+.storyboard-game .connect-receptacle { top: 42%; width: 18%; height: 20%; border: 0; background: none; }
+.storyboard-game .receptacle-central { left: 8%; }
+.storyboard-game .receptacle-supporting { right: 8%; }
+.storyboard-game .receptacle-label,
+.storyboard-game .receptacle-empty,
+.storyboard-game .connect-receptacle > strong,
+.storyboard-game .connection-readout,
+.storyboard-game .connection-hint,
+.storyboard-game .chamber-spark,
+.storyboard-game .connect-back-sort { display: none; }
+.storyboard-game .connect-receptacle .sort-gem { width: 8.3cqw; height: 8.3cqw; }
+.storyboard-game .receptacle-clear { width: 2cqw; height: 2cqw; top: 15%; right: 6%; opacity: 0; }
+.storyboard-game .connect-receptacle:hover .receptacle-clear,
+.storyboard-game .receptacle-clear:focus-visible { opacity: 1; }
+.storyboard-game .chamber-visual { top: 24%; left: 43%; width: 14%; height: 32%; }
+.storyboard-game .crystal-materialize { width: 70%; height: 75%; }
+.storyboard-game .crystal-write-control { position: absolute; inset: 0; border: 0; border-radius: 30%; background: transparent; cursor: pointer; z-index: 3; }
+.storyboard-game .crystal-write-control:hover { box-shadow: 0 0 20px #a3fcdb45; }
+.storyboard-game .screen-connect .raven-character.raven-guide { left: 4%; bottom: 51%; width: 16%; height: 25%; }
+.storyboard-game .connection-writing { text-align: left; margin: 20px 0; }
+.storyboard-game .connection-writing label { font: 15px/1.5 Georgia,serif; margin-bottom: 12px; }
+.storyboard-game .connection-writing textarea { height: 150px; min-height: 110px; max-height: 35vh; font: 16px/1.5 Georgia,serif; padding: 12px; background: #f1ddbb; }
+.storyboard-game .connection-writing #connection-writing-help { font: 12px/1.5 Georgia,serif; color: #d7c4a5; margin-top: 10px; gap: 16px; }
+.storyboard-game .connection-writing-members { display: flex; flex-wrap: wrap; margin-bottom: 20px; }
+
+/* Stage 5: the machinery remains unobscured during rune work. */
+.storyboard-game .elaborate-title { top: 26%; }
+.storyboard-game .elaborate-phase-intro .elaborate-hud,
+.storyboard-game .elaborate-phase-review .elaborate-hud { display: none; }
+.storyboard-game .elaborate-phase-intro :is(.scroll-paper,.scroll-roll),
+.storyboard-game .elaborate-phase-intro .dialogue-copy { display: none; }
+.storyboard-game .elaborate-crystal-tray { top: 5%; left: 3%; width: 9%; height: 45%; padding: 1.5cqw 1.4cqw; background: #06080bb5; }
+.storyboard-game .elaborate-crystal-tray > .eyebrow,
+.storyboard-game .elaborate-crystal-tray > h2,
+.storyboard-game .elaborate-source { display: none; }
+.storyboard-game .crystal-tray-list { grid-template-columns: 1fr; gap: 1.6cqw; overflow-y: auto; }
+.storyboard-game .crystal-choice { width: 100%; aspect-ratio: 1; padding: .8cqw; background: linear-gradient(#030505b8 70%,#aa87572e); }
+.storyboard-game .crystal-choice .sort-gem { width: 100%; height: 100%; max-height: 4.6cqw; }
+.storyboard-game .crystal-choice > svg { display: none; }
+.storyboard-game .elaborate-chamber-drop { top: 29%; left: 41%; width: 25%; height: 30%; border: 0; background: transparent; }
+.storyboard-game .elaborate-chamber-drop > span,
+.storyboard-game .elaborate-chamber-drop > img { display: none; }
+.storyboard-game .elaborate-chamber-active { top: 34%; left: 46%; width: 16%; height: 26%; border: 0; border-radius: 50%; background: transparent; }
+.storyboard-game .elaborate-chamber-active .sort-gem { width: 90%; height: 90%; filter: drop-shadow(0 0 9px #d7eaff55); }
+.storyboard-game .screen-elaborate .raven-character.raven-guide { left: 2%; bottom: 39%; width: 14%; height: 23%; }
+.storyboard-game .rune-flask { width: 8%; height: 14%; border: 0; opacity: .85; box-shadow: inset 0 0 18px #ffffff66; }
+.storyboard-game .rune-flask.rune-selected { opacity: 1; box-shadow: 0 0 0 1px #ffd88e, 0 0 14px var(--rune-color), inset 0 0 18px #fff7; }
+.storyboard-game .rune-label { display: none; }
+.storyboard-game .rune-glyph { width: 65%; height: 65%; color: #b00c0d; filter: drop-shadow(2px 3px 1px #35040b80); }
+.storyboard-game .rune-hint { left: 24%; top: 85%; width: 55%; font: 1cqw/1.45 Georgia,serif; padding: .6cqw 1cqw; min-height: 0; }
+.storyboard-game .infusion-review { top: 22%; left: 17%; width: 68%; height: 40%; padding: 0; background: transparent; }
+.storyboard-game .infusion-review > .corner,
+.storyboard-game .infusion-review > p,
+.storyboard-game .infusion-review > h1 { display: none; }
+.storyboard-game .infusion-list { display: flex; height: 100%; width: 100%; justify-content: space-around; gap: 4cqw; overflow-x: auto; }
+.storyboard-game .infusion-card { flex: 0 0 25%; max-width: 25%; height: 100%; border: 0; padding: 0; background: transparent; box-shadow: none; }
+.storyboard-game .infusion-card .infusion-vial { width: 100%; height: 100%; filter: drop-shadow(0 0 15px #80d6ff22); }
+.storyboard-game .infusion-card > strong,
+.storyboard-game .infusion-card > span { display: none; }
+.storyboard-game .infusion-card:hover { background: transparent; filter: brightness(1.15); }
+.storyboard-game .modal .infusion-editor { position: relative; inset: auto; width: 100%; height: auto; padding: 0; background: none; text-align: left; }
+.storyboard-game .modal .infusion-editor > .corner,
+.storyboard-game .modal .infusion-editor > .eyebrow { display: none; }
+.storyboard-game .modal .infusion-editor h2 { font-size: 20px; margin: 14px 0; }
+.storyboard-game .modal .infusion-editor label { font: 15px/1.5 Georgia,serif; margin-bottom: 12px; }
+.storyboard-game .modal .infusion-editor textarea { flex: auto; min-height: 170px; height: 25vh; font: 16px/1.5 Georgia,serif; padding: 12px; resize: vertical; }
+.storyboard-game .modal .infusion-editor-count { font: 12px/1.5 Georgia,serif; padding: 12px 0; gap: 12px; }
+.storyboard-game .modal .infusion-editor-actions { flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.storyboard-game .modal .infusion-editor .text-link { font-size: 13px; }
+.storyboard-game .modal .infusion-editor .gold-button { font-size: 11px; min-width: 160px; min-height: 38px; }
+.storyboard-game .modal .infusion-editor .gold-button > span { padding: 8px 12px; }
+
+/* Stage 6: stock, dotted throw arc, beast status, final impact. */
+.storyboard-game .challenge-beast { top: 21%; left: 39%; width: 23%; height: 48%; }
+.storyboard-game .screen-challenge .raven-character.raven-guide { left: 10%; bottom: 29%; width: 17%; height: 25%; }
+.storyboard-game .challenge-stock { top: 5%; left: 3%; width: 10%; height: 46%; padding: 2cqw 1.7cqw; background: #040608b5; }
+.storyboard-game .challenge-stock > .eyebrow,
+.storyboard-game .challenge-stock h2,
+.storyboard-game .challenge-vial-choice > span,
+.storyboard-game .challenge-vial-choice > small { display: none; }
+.storyboard-game .challenge-stock-list { grid-template-columns: 1fr; gap: 1.4cqw; overflow-y: auto; }
+.storyboard-game .challenge-vial-choice { min-height: 0; width: 100%; aspect-ratio: 1; padding: .5cqw; background: linear-gradient(#030505b8 70%,#aa87572e); }
+.storyboard-game .challenge-vial-choice .infusion-vial { width: 100%; height: 100%; max-height: 5cqw; }
+.storyboard-game .challenge-vial-choice:disabled { opacity: 1; }
+.storyboard-game .challenge-vial-choice.vial-used .infusion-vial { visibility: hidden; }
+.storyboard-game .challenge-stock > .text-link { position: absolute; top: 102%; font-size: .8cqw; opacity: 0; }
+.storyboard-game .challenge-stock:hover > .text-link,
+.storyboard-game .challenge-stock > .text-link:focus-visible { opacity: 1; }
+.storyboard-game .challenge-status { top: 6%; left: 45%; width: 22%; padding: .3cqw 0 .3cqw 5.8cqw; display: block; border: 0; border-radius: 0; background: transparent; }
+.storyboard-game .challenge-status::before { content: ''; position: absolute; top: 0; left: 0; width: 5.5cqw; height: 5.5cqw; background: #35302f url('/assets/stage6-beast.webp') center top/cover; border: 1px solid #ad9560; }
+.storyboard-game .beast-status { gap: .4cqw; }
+.storyboard-game .challenge-status .beast-status > span:first-child { font: 1.5cqw Georgia,serif; letter-spacing: 0; }
+.storyboard-game .challenge-status strong { display: none; }
+.storyboard-game .status-track { height: 1.15cqw; }
+.storyboard-game .confusion-status { margin-top: .15cqw; }
+.storyboard-game .confusion-status > span:first-child:not(.status-track) { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; }
+.storyboard-game .confusion-status .status-track { height: .8cqw; }
+.storyboard-game .challenge-controls { top: 53%; right: 11%; width: 20%; min-height: 0; padding: .6cqw; background: #0e1420d9; opacity: 0; transition: opacity 180ms; }
+.storyboard-game .challenge-controls:hover,
+.storyboard-game .challenge-controls:focus-within { opacity: 1; }
+.storyboard-game .challenge-controls .eyebrow,
+.storyboard-game .challenge-controls .corner,
+.storyboard-game .challenge-control-actions { display: none; }
+.storyboard-game .challenge-controls label { font-size: 1.1cqw; margin: .4cqw 0; }
+.storyboard-game .challenge-stage:not(.has-selected-infusion) :is(.challenge-arc,.challenge-reticle) { display: none; }
+.storyboard-game .challenge-reticle { width: 2.4cqw; height: 2.4cqw; border: 0; box-shadow: none; background: transparent; opacity: .7; }
+.storyboard-game .challenge-ready-vial { position: absolute; left: 68%; top: 44%; width: 8%; height: 21%; pointer-events: none; transform: rotate(16deg); }
+.storyboard-game .challenge-ready-vial .infusion-vial { width: 100%; height: 100%; }
+.storyboard-game .challenge-phase-won .challenge-result { display: none; }
+.storyboard-game .challenge-phase-won :is(.scroll-paper,.scroll-roll),
+.storyboard-game .challenge-phase-won .dialogue-copy { display: none; }
+.storyboard-game .impact-hit { background: radial-gradient(circle,#fffed7 0 7%,#ffc83d 13%,#f2450add 30%,#9e120dc0 45%,transparent 69%); box-shadow: 0 0 40px #d4411a80; }
+.storyboard-game .victory-embers { position: absolute; top: 22%; left: 34%; width: 33%; height: 44%; overflow: visible; z-index: 7; pointer-events: none; animation: ember-glow 3s ease-in-out infinite; }
+@keyframes ember-glow { 0%,100% { opacity: .8; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.05); } }
+
+/* Two ending frames. Additional writing and export live in the record dialog. */
+.storyboard-game .ending-heading,
+.storyboard-game .portal-label,
+.storyboard-game .archive-scroll-button > span { display: none; }
+.storyboard-game .ending-phase-portal .ending-no-arrows,
+.storyboard-game .ending-phase-portal .ending-dialogue-actions { display: none; }
+.storyboard-game .ending-portal { position: absolute; margin: 0; top: 34%; left: 43%; width: 14%; height: 32%; }
+.storyboard-game .archive-scroll-button { position: absolute; margin: 0; top: 43%; left: 27%; width: 46%; height: 25%; }
+.storyboard-game .screen-ending .raven-character.raven-guide { left: 10%; bottom: 28%; width: 16%; height: 25%; }
+.storyboard-game .ending-phase-archive .raven-character.raven-guide { left: 39%; bottom: 62%; width: 22%; height: 32%; }
+.storyboard-game .modal { container-type: normal; }
+.storyboard-game .modal .story-icon { width: 24px; height: 24px; }
+.storyboard-game :is(.ending-heading,.prologue-intro,.collected-heading,.challenge-phase-won .challenge-result),
+.storyboard-game .infusion-review > h1 {
+  display: block; position: absolute; inset: auto; width: 1px; height: 1px; min-height: 0;
+  padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.storyboard-game .sort-dialogue .parchment-link { display: block; position: absolute; left: 6%; bottom: 13%; font: 1cqw Georgia,serif; }
+@media (max-aspect-ratio: 11/10) {
+  .storyboard-game .sort-dialogue .parchment-link { font-size: 12px; }
+}
+.storyboard-game.large-text .game-frame .dialogue-copy { font-size: 1.6cqw; line-height: 1.4; }
+
+@media (hover: none) {
+  .storyboard-game .idea-card-actions,
+  .storyboard-game .challenge-controls { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .storyboard-game .victory-embers { animation: none; }
+}
+
+/* Portrait keeps the same scene order, with readable text and touch-sized targets. */
+@media (max-aspect-ratio: 11/10) {
+  .storyboard-game { display: block; }
+  .storyboard-game .game-frame { width: 100%; height: max(960px,100svh); min-height: 960px; aspect-ratio: auto; overflow: hidden; }
+  .storyboard-game .room-art { background-size: auto 100%; background-position: center top; background-repeat: no-repeat; }
+  .storyboard-game .room-vignette { background: linear-gradient(180deg, transparent 38%, #0b101922 70%, #0b10196e 100%); }
+  .storyboard-game :is(.screen-prologue,.screen-prepare,.screen-journey) .room-art { background-position: 10% top; }
+  .storyboard-game .screen-landing .room-art,
+  .storyboard-game .screen-name .room-art { background-size: auto 100%; }
+  .storyboard-game .screen-landing .room-art { background-position: 20% center; }
+  .storyboard-game .screen-name .room-art { background-position: 76% center; }
+  .storyboard-game .screen-landing,
+  .storyboard-game .screen-name { min-height: 700px; height: 100svh; }
+  .storyboard-game .landing-content { min-height: 0; }
+  .storyboard-game .hero-title { top: 28%; left: 50%; width: 80%; }
+  .storyboard-game .hero-title h1 { font-size: 13cqw; }
+  .storyboard-game .title-the { font-size: 5cqw; }
+  .storyboard-game .moe-crest { width: 52px; top: 9%; }
+  .storyboard-game .landing-actions { top: 64%; width: 68%; }
+  .storyboard-game .landing-actions .gold-button { min-height: 44px; font-size: 12px; }
+  .storyboard-game .landing-actions .gold-button span { padding: 10px 18px; }
+  .storyboard-game .landing-letter { display: none; }
+  .storyboard-game .raven-character,
+  .storyboard-game .raven-character.raven-guide { top: 370px; bottom: auto; left: 0; width: 40%; height: 160px; opacity: 1; }
+  .storyboard-game .screen-landing .raven-character { top: 43%; }
+  .storyboard-game .name-panel { top: 26%; left: 7%; width: 86%; padding: 40px 30px 20px; }
+  .storyboard-game .name-panel h1 { font-size: 20px; margin-bottom: 24px; }
+  .storyboard-game .name-field { padding: 9px 14px; border-radius: 24px; }
+  .storyboard-game .name-field input { font-size: 16px; }
+  .storyboard-game .field-help { height: 25px; margin: 9px 0; }
+  .storyboard-game .field-help.error { font-size: 12px; }
+  .storyboard-game .form-actions { gap: 12px; }
+  .storyboard-game .form-actions .gold-button,
+  .storyboard-game .form-actions .quiet-button { min-width: 90px; min-height: 40px; font-size: 12px; }
+  .storyboard-game .form-actions .gold-button span { padding: 8px 16px; }
+  .storyboard-game .name-panel .ornament { margin-top: 24px; }
+  .storyboard-game .side-tools { top: 24px; right: 12px; gap: 8px; }
+  .storyboard-game .side-tools .round-button { width: 42px; height: 42px; }
+  .storyboard-game .corner { width: 40px; height: 40px; }
+  .storyboard-game .game-frame .dialogue-scroll { top: clamp(500px, calc(100svh - 340px), 620px); bottom: auto; left: 4%; width: 92%; height: 272px; min-height: 0; }
+  .storyboard-game .game-frame .dialogue-content { padding: 29px 28px 36px; }
+  .storyboard-game .game-frame .dialogue-copy { font-size: 14px; line-height: 1.45; }
+  .storyboard-game .game-frame .dialogue-hint { font-size: 12px; }
+  .storyboard-game .game-frame .dialogue-navigation { right: 4px; bottom: -52px; gap: 12px; z-index: 4; }
+  .storyboard-game .game-frame .dialogue-navigation .round-button,
+  .storyboard-game .scene-navigation .round-button { width: 42px; height: 42px; }
+  .storyboard-game .screen-prologue .dialogue-navigation,
+  .storyboard-game .screen-prepare .dialogue-navigation { right: 4px; }
+  .storyboard-game .screen-journey .dialogue-navigation,
+  .storyboard-game .game-frame :is(.generate-dialogue,.sort-dialogue,.connect-dialogue,.elaborate-dialogue,.challenge-dialogue,.ending-dialogue) > .dialogue-navigation { right: 58px; }
+  .storyboard-game .dialogue-scroll .gold-button:not(.modal .gold-button) { right: 4px; bottom: -52px; width: 42px; height: 42px; }
+  .storyboard-game .scene-navigation { right: 4%; bottom: 46px; gap: 12px; }
+  .storyboard-game .question-panel { top: 180px; left: 7%; width: 80%; padding: 35px 24px 28px; }
+  .storyboard-game .question-panel h1 { font-size: 21px; line-height: 1.4; }
+  .storyboard-game .question-panel .ornament { margin: 18px auto; }
+  .storyboard-game .keyword-buttons { gap: 8px; margin-inline: -6px; }
+  .storyboard-game .keyword-button { min-height: 40px; padding: 5px 9px; font-size: 13px; }
+  .storyboard-game .journey-panel { top: 185px; left: 9%; width: 77%; height: 310px; padding: 25px 20px; }
+  .storyboard-game .journey-map { gap: 13px; }
+  .storyboard-game .recap-timer { top: 40px; }
+  .storyboard-game :is(.forge-hud,.sort-hud,.connect-hud,.elaborate-hud) { top: 35px; left: 38%; width: auto; gap: 5px; }
+  .storyboard-game .forge-timer { min-height: 40px; padding: 3px 9px 3px 4px; gap: 3px; border-radius: 28px; }
+  .storyboard-game .forge-timer [role="timer"] { font-size: 21px; }
+  .storyboard-game .forge-timer .story-icon-hourglass { width: 25px; height: 30px; }
+  .storyboard-game .forge-timer > button { top: 48px; left: 0; margin: 0; opacity: 1; pointer-events: auto; width: 34px; height: 34px; }
+  .storyboard-game .forge-timer > button svg { width: 17px; height: 17px; }
+  .storyboard-game .timer-mode { top: 48px; left: 40px; opacity: 1; min-width: 110px; font-size: 10px; min-height: 34px; padding: 5px; }
+  .storyboard-game :is(.sort-progress,.connect-progress,.elaborate-meter) { top: 50px; left: -48px; width: 34px; height: 34px; padding: 7px; opacity: 1; }
+  .storyboard-game :is(.sort-progress,.connect-progress,.elaborate-meter) > svg { width: 20px; height: 20px; }
+  .storyboard-game .forge-pouch-meter { min-height: 40px; min-width: 78px; padding: 5px; gap: 4px; }
+  .storyboard-game .forge-pouch-meter > svg { width: 22px; height: 24px; }
+  .storyboard-game .pouch-meter-track { height: 10px; width: 39px; }
+  .storyboard-game :is(.generate-title,.sort-title,.elaborate-title) { top: 220px; left: 12%; width: 74%; padding: 40px 20px 25px; }
+  .storyboard-game :is(.generate-title,.sort-title,.elaborate-title) > .eyebrow,
+  .storyboard-game :is(.generate-title,.sort-title,.elaborate-title) h1 { font-size: 21px; }
+  .storyboard-game :is(.generate-title,.sort-title,.elaborate-title) h1 { margin: 10px 0 20px; }
+  .storyboard-game .gateway-closed-background { background-size: auto 100%; background-position: center top; }
+  .storyboard-game .screen-generate .raven-character.raven-guide { top: 400px; left: 0; bottom: auto; width: 36%; height: 160px; }
+  .storyboard-game .screen-generate.generate-entrance .raven-character { top: 220px; left: 36%; width: 28%; height: 130px; transform: none; }
+  .storyboard-game .idea-card { top: 205px; left: 10%; width: 76%; padding: 36px 20px 18px; }
+  .storyboard-game .idea-copy h2 { font-size: 22px; }
+  .storyboard-game .idea-copy .ornament { margin: 20px auto 14px; }
+  .storyboard-game .idea-card-actions { opacity: 1; gap: 5px; margin-top: 15px; }
+  .storyboard-game .idea-card-actions .gold-button { min-height: 38px; min-width: 150px; font-size: 10px; }
+  .storyboard-game .idea-card-actions .gold-button span { padding: 6px 10px; }
+  .storyboard-game .idea-card-actions .gold-button svg { width: 14px; height: 14px; }
+  .storyboard-game .idea-arrow { width: 30px; height: 38px; }
+  .storyboard-game .idea-arrow svg { width: 20px; height: 20px; }
+  .storyboard-game .idea-charms { position: absolute; top: 460px; left: 22%; width: 65%; height: 120px; display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+  .storyboard-game .ore-button { position: relative; inset: auto; width: 100%; padding: 0; }
+  .storyboard-game .ore-crystal { width: 30px; height: 36px; }
+  .storyboard-game .collected-pouch { top: 160px; width: 67%; height: 385px; }
+  .storyboard-game .sort-tray { top: 155px; left: 8%; }
+  .storyboard-game .sort-tray { width: 73%; height: 260px; padding: 24px; }
+  .storyboard-game .sort-ore-grid,
+  .storyboard-game .mockup-ore-grid { gap: 10px; }
+  .storyboard-game .sort-ore,
+  .storyboard-game .ore-preview { padding: 8px; }
+  .storyboard-game .sort-ore .sort-gem,
+  .storyboard-game .ore-preview .sort-gem { max-height: 50px; }
+  .storyboard-game .sort-undo { top: 100%; min-height: 28px; font-size: 11px; padding: 5px 10px; }
+  .storyboard-game .sort-undo svg { width: 14px; height: 14px; }
+  .storyboard-game .sorting-belts { top: 454px; left: 5%; width: 90%; height: 140px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+  .storyboard-game .sorting-belt { position: relative; inset: auto; width: 100%; height: 140px; border: 1px solid var(--belt-color); background: linear-gradient(#121b21aa,color-mix(in srgb,var(--belt-color) 30%,#0b1019)); }
+  .storyboard-game .belt-destination { min-height: 36px; padding: 5px 3px; }
+  .storyboard-game .belt-destination strong { font-size: 13px; }
+  .storyboard-game .belt-gems { padding: 4px; gap: 4px; }
+  .storyboard-game .belt-gems .sort-ore { height: 36px; padding: 4px; }
+  .storyboard-game .belt-gems .sort-gem { width: 28px; height: 28px; }
+  .storyboard-game .belt-drop-zone { min-height: 30px; }
+  .storyboard-game .sort-selected-readout { font-size: 12px; margin-top: 12px; }
+  .storyboard-game .screen-sort .raven-character.raven-guide { top: 315px; left: 0; width: 29%; height: 140px; opacity: .8; }
+  .storyboard-game .connect-intro-inventory { top: 170px; left: 14%; width: 66%; height: 300px; padding: 27px 25px; }
+  .storyboard-game .connect-inventory { top: 185px; width: 41%; height: 100px; padding: 15px 12px; }
+  .storyboard-game .inventory-central { left: 4%; }
+  .storyboard-game .inventory-supporting { right: 4%; left: auto; }
+  .storyboard-game .connect-inventory-grid { gap: 6px; }
+  .storyboard-game .connection-ore { padding: 5px; }
+  .storyboard-game .connect-receptacle { top: 360px; width: 40%; height: 135px; background: radial-gradient(ellipse,#132b32bb,transparent 70%); }
+  .storyboard-game .receptacle-central { left: 4%; }
+  .storyboard-game .receptacle-supporting { right: 4%; }
+  .storyboard-game .connect-receptacle .sort-gem { width: 80px; height: 80px; }
+  .storyboard-game .receptacle-clear { width: 30px; height: 30px; opacity: 1; top: 5%; padding: 6px; }
+  .storyboard-game .chamber-visual { top: 270px; left: 35%; width: 30%; height: 185px; }
+  .storyboard-game .connect-missing { top: 320px; left: 8%; width: 84%; padding: 22px; }
+  .storyboard-game .connect-missing h2 { font-size: 20px; }
+  .storyboard-game .connect-missing p { font-size: 13px; }
+  .storyboard-game .inventory-empty { font-size: 12px; }
+  .storyboard-game .screen-connect .raven-character.raven-guide { top: 455px; left: 2%; width: 32%; height: 140px; }
+  .storyboard-game .elaborate-crystal-tray { top: 150px; left: 4%; width: 19%; height: 310px; padding: 22px 14px; }
+  .storyboard-game .crystal-tray-list { gap: 15px; }
+  .storyboard-game .crystal-choice { padding: 8px; min-height: 45px; }
+  .storyboard-game .crystal-choice .sort-gem { max-height: 50px; }
+  .storyboard-game .elaborate-chamber-drop { top: 255px; left: 35%; width: 43%; height: 200px; }
+  .storyboard-game .elaborate-chamber-active { top: 260px; left: 40%; width: 35%; height: 165px; }
+  .storyboard-game .screen-elaborate .raven-character.raven-guide { top: 390px; left: 0; width: 30%; height: 130px; }
+  .storyboard-game .rune-choice-row { top: 470px; left: 8%; right: auto; bottom: auto; width: 84%; display: grid; grid-template-columns: repeat(3,1fr); gap: 22px 14px; }
+  .storyboard-game .rune-flask { position: relative; inset: auto; transform: none; width: 100%; height: 83px; }
+  .storyboard-game .rune-flask:hover { transform: none; }
+  .storyboard-game .rune-hint { top: 705px; left: 8%; width: 84%; font-size: 13px; padding: 13px; }
+  .storyboard-game .infusion-review { top: 270px; left: 10%; width: 80%; height: 250px; }
+  .storyboard-game .infusion-list { gap: 15px; }
+  .storyboard-game .infusion-card { flex-basis: 28%; max-width: 28%; }
+  .storyboard-game .challenge-beast { top: 210px; left: 28%; width: 49%; height: 310px; }
+  .storyboard-game .challenge-status { top: 100px; left: 33%; width: 45%; padding: 5px 0 5px 44px; }
+  .storyboard-game .challenge-status::before { width: 40px; height: 44px; }
+  .storyboard-game .challenge-status .beast-status > span:first-child { font-size: 17px; }
+  .storyboard-game .status-track { height: 9px; }
+  .storyboard-game .confusion-status .status-track { height: 6px; }
+  .storyboard-game .challenge-stock { top: 180px; left: 4%; width: 22%; height: 300px; padding: 24px 13px; }
+  .storyboard-game .challenge-stock-list { gap: 16px; }
+  .storyboard-game .challenge-vial-choice { padding: 5px; min-height: 48px; }
+  .storyboard-game .challenge-vial-choice .infusion-vial { max-height: 58px; }
+  .storyboard-game .challenge-stock > .text-link { font-size: 11px; opacity: 1; }
+  .storyboard-game .challenge-arc { height: 700px; }
+  .storyboard-game .challenge-reticle { top: 322px; width: 25px; height: 25px; }
+  .storyboard-game .challenge-aim-surface { top: 200px; left: 27%; }
+  .storyboard-game .challenge-aim-surface { width: 50%; height: 300px; }
+  .storyboard-game .challenge-controls { top: 530px; left: auto; right: 7%; width: 54%; padding: 8px; opacity: 1; }
+  .storyboard-game .challenge-controls label { font-size: 13px; }
+  .storyboard-game .challenge-ready-vial { left: 70%; top: 370px; width: 23%; height: 145px; }
+  .storyboard-game .challenge-shot { --shot-start-y: 440px; --shot-end-y: 322px; width: 50px; height: 80px; }
+  .storyboard-game .challenge-impact { top: 322px; width: 180px; height: 180px; }
+  .storyboard-game .victory-embers { top: 265px; left: 26%; width: 52%; height: 240px; }
+  .storyboard-game .challenge-result { top: 300px; left: 8%; width: 84%; padding: 25px; }
+  .storyboard-game .challenge-result h1 { font-size: 24px; }
+  .storyboard-game .challenge-result > p:last-child { font-size: 14px; }
+  .storyboard-game .screen-challenge .raven-character.raven-guide { top: 485px; left: 0; width: 30%; height: 140px; }
+  .storyboard-game .ending-stage { position: absolute; inset: 0; display: block; padding: 0; min-height: 0; }
+  .storyboard-game .ending-portal { top: 230px; left: 35%; width: 30%; height: 220px; }
+  .storyboard-game .archive-scroll-button { top: 360px; left: 7%; width: 86%; height: 155px; }
+  .storyboard-game .screen-ending .raven-character.raven-guide { top: 415px; left: 0; width: 35%; height: 165px; }
+  .storyboard-game .ending-phase-archive .raven-character.raven-guide { top: 190px; left: 25%; width: 50%; height: 200px; }
+  .storyboard-game.large-text .game-frame .dialogue-copy { font-size: 16px; line-height: 1.45; }
+  .storyboard-game.large-text .game-frame { min-height: 1030px; }
+  .storyboard-game.large-text .game-frame .dialogue-scroll { top: clamp(500px, calc(100svh - 398px), 570px); height: 330px; }
+  .storyboard-game .modal-content { padding: 30px 22px; }
+}
+.storyboard-game .connection-context { color: #e0ceb0; font: 15px/1.5 Georgia,serif; margin-bottom: 20px; }
+.storyboard-game .connection-context p { margin: 8px 0; }
+.storyboard-game .challenge-still .victory-embers,
+.storyboard-game.reduced-motion .victory-embers { animation-play-state: paused; }
